@@ -45,26 +45,50 @@ class Specs:
     @property
     def gpu_tier(self) -> int:
         """0-5 közötti kategória a GPU modellszámából (durva közelítés)."""
-        for gpu in self.gpus:
-            digits = "".join(ch for ch in gpu if ch.isdigit())
-            if not digits:
-                continue
-            num = int(digits[:4])
-            if num >= 5080:
-                return 5
-            if num >= 5070:
-                return 4
-            if num >= 4070:
-                return 4
-            if num >= 4060:
-                return 3
-            if num >= 3070:
-                return 3
-            if num >= 3060:
-                return 2
-            if num >= 2000:
-                return 1
+        return max((_gpu_tier(gpu) for gpu in self.gpus), default=0)
+
+
+_GENERATION_TABLE: dict[int, dict[int, int]] = {
+    50: {90: 5, 80: 5, 70: 4, 60: 3, 50: 3},
+    40: {90: 5, 80: 5, 70: 4, 60: 3, 50: 2},
+    30: {90: 4, 80: 4, 70: 3, 60: 2, 50: 1},
+    20: {90: 3, 80: 3, 70: 2, 60: 1, 50: 1},
+    16: {60: 1, 50: 1},
+    10: {80: 1, 70: 1},
+}
+
+
+def _gpu_tier(gpu: str) -> int:
+    """'rtx 4060' -> 3, 'rtx 5090' -> 5, 'rx 7800' -> 4, ismeretlen -> 0."""
+    model = gpu.split()[-1]
+    digits = "".join(ch for ch in model if ch.isdigit())
+    if not digits:
         return 0
+    number = int(digits)
+
+    if gpu.startswith("rx"):
+        if number >= 7900:
+            return 5
+        if number >= 7800:
+            return 4
+        if number >= 7600:
+            return 3
+        if number >= 6600:
+            return 2
+        return 1
+    if gpu.startswith("arc"):
+        return 2
+
+    generation, klass = divmod(number, 100)
+    tier = _GENERATION_TABLE.get(generation, {}).get(klass)
+    if tier is not None:
+        return tier
+    # ismeretlen modellszám: generáció alapján óvatos becslés
+    if 40 <= generation <= 59:
+        return 2
+    if 30 <= generation < 40:
+        return 1
+    return 0
 
 
 @dataclass
