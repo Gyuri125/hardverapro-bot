@@ -1,0 +1,161 @@
+# ============================================================
+#  apro-deal-radar – konfiguráció
+# ============================================================
+#  Minden kulcsszó ékezet- és kis/nagybetű-függetlenül illeszkedik
+#  ("hibas" = "hibás" = "HIBÁS").
+#
+#  A fájl a GitHub Actionből is ezt használja: config.yaml
+#  Ha kísérletezni akarsz, csinálj config.local.yaml-t és indítsd
+#  így:  python -m dealradar --config config.local.yaml
+# ============================================================
+
+settings:
+  # Kérésenkénti szünet másodpercben. A hardverapro.hu robots.txt
+  # crawl-delay: 1, ezért 1.5 alá ne menj.
+  request_delay: 1.5
+  timeout: 20
+  retries: 3
+
+  # Discord webhookot KIZÁRÓLAG környezeti változóból olvasunk,
+  # hogy ne kerülhessen a repóba. GitHubon: Settings -> Secrets.
+  webhook_env: DISCORD_WEBHOOK_URL
+
+  # Ennél alacsonyabb pontszámú találatot nem küldünk el.
+  min_score: 50
+  # Egy futásban max. ennyi értesítést küldünk (spam védelem).
+  max_notifications: 20
+
+  # Ezeket a hirdetéseket már láttuk -> ne küldjük újra.
+  state_file: state/seen.json
+  state_retention_days: 60
+  # Ha egy korábban már elküldött hirdetés ára ennyivel lecsökken,
+  # akkor újra szólunk róla. 0 = kikapcsolva.
+  renotify_price_drop_percent: 10
+
+  # Egyedi hirdetésoldalak letöltése a jelöltekhez (leírás + állapot).
+  # Ez adja a legpontosabb szűrést, de lassabb.
+  deep_scan: true
+  deep_scan_limit: 40
+
+# ------------------------------------------------------------
+#  HOL keressünk
+#  Bármilyen Hardverapró kategória URL jó. A lapozás:
+#  <url>?offset=100, ?offset=200 ... (max_pages db oldal)
+# ------------------------------------------------------------
+watches:
+  - name: "Notebook – minden"
+    url: "https://hardverapro.hu/aprok/notebook/index.html"
+    max_pages: 3
+    filters:
+      min_price: 80000
+      max_price: 600000
+      # Ha ezek bármelyike szerepel a címben/leírásban -> kihagyjuk
+      exclude_keywords:
+        - alkatrész
+        - alkatrésznek
+        - hibás
+        - törött
+        - nem működik
+        - nem megy
+        - kijelző hiba
+        - javított
+        - vízkár
+        - lopott
+        - csere
+        - "keresem"
+      # Fizetett "Előresorolva" hirdetések kihagyása (általában boltok)
+      exclude_promoted: true
+      # Bolti (Bazár / üzleti) eladók engedélyezése
+      allow_business: true
+      # Csak ennyi pozitív értékelés felett (null = bármennyi)
+      min_seller_rating: 0
+      # Ha meg van adva, csak ezekben a vármegyékben/városokban
+      # (üres lista = az ország egésze)
+      locations: []
+
+  # Példa második figyelőre (kapcsold be, ha kell):
+  # - name: "Asztali PC alkatrész – VGA"
+  #   url: "https://hardverapro.hu/aprok/hardver/videokartya/index.html"
+  #   max_pages: 2
+  #   filters:
+  #     min_price: 30000
+  #     max_price: 200000
+  #     exclude_keywords: [hibás, alkatrész, törött]
+
+# ------------------------------------------------------------
+#  MI számít jó dealnek
+#
+#  A hirdetés akkor kerül be, ha VALAMELYIK profilra illeszkedik:
+#    - minden `all_keywords` szerepel benne
+#    - legalább egy `any_keywords` szerepel benne (ha van ilyen)
+#    - egyik `none_keywords` sem szerepel benne
+#    - az ár a [min_price, max_price] sávban van
+#    - a `specs` megkötések teljesülnek (amit fel tudunk ismerni)
+#
+#  Pontszám (0-100):
+#    35  profil illeszkedés
+#    40  ár-előny a `deal_price`-hoz képest (vagy a piaci mediánhoz)
+#    25  felszereltség (RAM, SSD, GPU, Hz, gari, új állapot)
+#  A `min_score` felettiek mennek ki Discordra.
+# ------------------------------------------------------------
+profiles:
+  - name: "Legion 5 / 5 Pro – jó ár"
+    any_keywords: ["legion 5", "legion5", "legion 5 pro"]
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött"]
+    min_price: 120000
+    max_price: 430000
+    # Ez alatt az ár alatt igazi vétel. Ha nincs megadva, a piaci
+    # mediánt használjuk viszonyítási alapnak.
+    deal_price: 340000
+    specs:
+      gpu_any: ["3060", "3070", "3080", "4060", "4070", "5050", "5060"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  - name: "Legion 7 / Slim – jó ár"
+    any_keywords: ["legion 7", "legion7", "legion slim", "legion 9"]
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött"]
+    min_price: 150000
+    max_price: 600000
+    deal_price: 480000
+    specs:
+      gpu_any: ["4060", "4070", "4080", "4090", "5060", "5070", "5080"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  - name: "Bármilyen gamer – RTX 4070 vagy újabb, jó áron"
+    any_keywords: []
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött"]
+    min_price: 150000
+    max_price: 550000
+    deal_price: 430000
+    specs:
+      gpu_any: ["4070", "4080", "4090", "5070", "5080", "5090"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  - name: "Olcsó Legion – bármi, nagyon jó áron"
+    any_keywords: ["legion"]
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött"]
+    min_price: 80000
+    max_price: 300000
+    deal_price: 240000
+    specs:
+      min_ram_gb: 8
+      min_storage_gb: 256
+
+# ------------------------------------------------------------
+#  Piaci medián összehasonlítás (opcionális, de ajánlott)
+#  A futás során látott hirdetésekből számol egy medián árat
+#  GPU-osztályonként, és ha egy hirdetés ennél jóval olcsóbb,
+#  plusz pontot ad. Így nem kell minden árat kézzel belőni.
+# ------------------------------------------------------------
+market_compare:
+  enabled: true
+  group_by: gpu            # gpu | cpu | brand
+  min_samples: 10          # ennyi hirdetés alatt nem számol mediánt
+  good_deal_discount: 0.20 # 20% medián alatt = jó deal

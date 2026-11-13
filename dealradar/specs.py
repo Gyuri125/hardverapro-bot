@@ -1,0 +1,166 @@
+"""Hardver-adatok kinyerése a hirdetés szövegéből.
+
+Szándékosan megengedő: ami nem ismerhető fel, az None marad, és a
+szűrők ilyenkor nem utasítják el a hirdetést.
+"""
+
+from __future__ import annotations
+
+import re
+import unicodedata
+
+from .models import Specs
+
+GPU_RE = re.compile(
+    r"\b(?:nvidia\s+)?(?:geforce\s+)?(rtx|gtx|rx|arc)\s?-?\s?([a-z]?\d{3,4})\b",
+    re.I,
+)
+CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3})\b", re.I)
+CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3})\b")
+CPU_RYZEN_RE = re.compile(r"\bryzen\s+([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
+
+RAM_CTX_RE = re.compile(r"(\d{1,3})\s*GB\s*(?:DDR\d?|RAM)\b", re.I)
+RAM_LABEL_RE = re.compile(r"\bRAM\b[^0-9]{0,12}(\d{1,3})\s*GB", re.I)
+
+STORAGE_CTX_RE = re.compile(r"(\d{1,4})\s*(GB|TB)\b[^0-9]{0,10}(?:NVMe|SSD|M\.2|PCIe)", re.I)
+STORAGE_LABEL_RE = re.compile(r"(?:NVMe|SSD|M\.2|PCIe)[^0-9]{0,10}(\d{1,4})\s*(GB|TB)\b", re.I)
+TB_RE = re.compile(r"\b(\d{1,2})\s*TB\b", re.I)
+GB_TOKEN_RE = re.compile(r"\b(\d{1,4})\s*(GB|TB)\b", re.I)
+
+HZ_RE = re.compile(r"\b(\d{2,3})\s*Hz\b", re.I)
+SCREEN_RE = re.compile(r"(\d{1,2}(?:[.,]\d)?)\s*(?:\"|”|inch\b|hüvelyk\b|col\b)", re.I)
+
+STORAGE_VALUES = {120, 128, 240, 256, 320, 480, 500, 512, 640, 750, 1000, 1024, 2048, 4096}
+RAM_VALUES = {4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128}
+
+
+def norm(text: str) -> str:
+    """Kisbetűs, ékezet nélküli, egységes szóközű alak."""
+    text = text.lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = text.replace("đ", "d")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _find_gpus(text: str) -> list[str]:
+    found: list[str] = []
+    for brand, number in GPU_RE.findall(text):
+        gpu = f"{brand.lower()} {number.lower()}"
+        if gpu not in found:
+            found.append(gpu)
+    return found
+
+
+def _find_cpu(text: str) -> str | None:
+    match = CPU_ULTRA_RE.search(text)
+    if match:
+        return f"ultra {match.group(1)} {match.group(2).upper()}"
+    match = CPU_INTEL_RE.search(text) or CPU_INTEL_BARE_RE.search(text)
+    if match:
+        return f"{match.group(1).lower()}-{match.group(2).upper()}"
+    match = CPU_RYZEN_RE.search(text)
+    if match:
+        return f"ryzen {match.group(1)} {match.group(2).upper()}"
+    return None
+
+
+def _find_ram(text: str, title: str) -> int | None:
+    match = RAM_CTX_RE.search(text) or RAM_LABEL_RE.search(text)
+    if match:
+        value = int(match.group(1))
+        if value in RAM_VALUES or 1 <= value <= 256:
+            return value
+    # tartalék: "16GB / 512GB" típusú címek
+    tokens = [(int(v), unit.upper()) for v, unit in GB_TOKEN_RE.findall(title)]
+    for value, unit in tokens:
+        if unit == "GB" and value in RAM_VALUES:
+            # ha van mellette nagyobb tároló token, ez a RAM
+            if any(u == "TB" or (u == "GB" and v >= 240) for v, u in tokens):
+                return value
+    return None
+
+
+def _find_storage(text: str, title: str) -> int | None:
+    for regex in (STORAGE_CTX_RE, STORAGE_LABEL_RE):
+        match = regex.search(text)
+        if match:
+            value = int(match.group(1))
+            unit = match.group(2).upper()
+            return value * 1024 if unit == "TB" else value
+    match = TB_RE.search(text)
+    if match:
+        return int(match.group(1)) * 1024
+    # tartalék: címben "32GB 1TB" vagy "16GB/512GB"
+    tokens = [(int(v), unit.upper()) for v, unit in GB_TOKEN_RE.findall(title)]
+    for value, unit in tokens:
+        if unit == "TB":
+            return value * 1024
+    for value, unit in tokens:
+        if unit == "GB" and value in STORAGE_VALUES and value >= 240:
+            return value
+    return None
+
+
+def _find_screen(text: str) -> float | None:
+    for match in SCREEN_RE.finditer(text):
+        raw = match.group(1).replace(",", ".")
+        try:
+            value = float(raw)
+        except ValueError:  # pragma: no cover
+            continue
+        if 10.0 <= value <= 20.0:
+            return value
+    return None
+
+
+def _find_refresh(text: str) -> int | None:
+    values = [int(m) for m in HZ_RE.findall(text)]
+    values = [v for v in values if 30 <= v <= 540]
+    return max(values) if values else None
+
+
+def _has_warranty(text: str) -> bool:
+    n = norm(text)
+    if not re.search(r"garanci|(?:^|\W)gari\b", n):
+        return False
+    return not re.search(r"(garanci\w*|gari)\s*nelkul", n)
+
+
+def _is_new(text: str) -> bool:
+    n = norm(text)
+    if "bontatlan" in n or "vadonatuj" in n or "uj, bontatlan" in n:
+        return True
+    if "uj ara" in n or "ujkori ar" in n:
+        return False
+    return bool(re.search(r"\buj\b", n))
+
+
+def extract(text: str, title: str | None = None) -> Specs:
+    """Specifikációk kinyerése a címből + leírásból."""
+    title = title if title is not None else text
+    return Specs(
+        gpus=_find_gpus(text),
+        cpu=_find_cpu(text),
+        ram_gb=_find_ram(text, title),
+        storage_gb=_find_storage(text, title),
+        refresh_hz=_find_refresh(text),
+        screen_inch=_find_screen(text),
+        is_new=_is_new(text),
+        warranty=_has_warranty(text),
+    )
+
+
+def brand(text: str) -> str | None:
+    """Márka a címből (a medián-csoportosításhoz)."""
+    n = norm(text)
+    known = [
+        "lenovo", "asus", "acer", "hp", "dell", "msi", "apple", "macbook",
+        "razer", "gigabyte", "samsung", "huawei", "xiaomi", "microsoft",
+        "surface", "toshiba", "fujitsu", "clevo", "xmg", "framework",
+    ]
+    for name in known:
+        if re.search(rf"\b{name}\b", n):
+            return name
+    return None
