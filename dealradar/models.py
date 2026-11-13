@@ -18,6 +18,8 @@ class Specs:
     storage_gb: int | None = None
     refresh_hz: int | None = None
     screen_inch: float | None = None
+    oled: bool = False
+    keyboard: str | None = None  # "hu" | "foreign" | None (ismeretlen)
     is_new: bool = False
     warranty: bool = False
 
@@ -36,10 +38,16 @@ class Specs:
             parts.append(f"{self.screen_inch:g}\"")
         if self.refresh_hz:
             parts.append(f"{self.refresh_hz} Hz")
+        if self.oled:
+            parts.append("OLED")
         if self.is_new:
             parts.append("ÚJ")
         if self.warranty:
             parts.append("garanciás")
+        if self.keyboard == "hu":
+            parts.append("magyar billentyűzet")
+        elif self.keyboard == "foreign":
+            parts.append("NEM magyar billentyűzet")
         return " · ".join(parts)
 
     @property

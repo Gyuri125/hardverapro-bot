@@ -24,6 +24,9 @@ GitHub Actions (cron 3x/nap)
 
 - **Profilok**: megmondod, mi érdekel (pl. „Legion 5, RTX 4060/4070, max 430 eFt”),
   a program csak azokat küldi.
+- **Magyar billentyűzet**: a kifejezetten külföldi (német/US/UK) billentyűzetű
+  gépeket kiszűri, a magyart pedig jelzi az értesítésben.
+- **OLED-felismerés**: a feliratból kiderül, és plusz pontot ad.
 - **Ékezet-független** keresés: a „hibás” szűrő a „HIBAS”-t is elkapja.
 - **Piaci medián**: a futás során látott hirdetésekből számol árszintet
   GPU-osztályonként, és jelzi, ha valami feltűnően olcsó.
@@ -32,7 +35,7 @@ GitHub Actions (cron 3x/nap)
 - **Nincs spam**: amit már elküldött, azt nem küldi újra (kivéve, ha az ára
   jelentősen lecsökkent).
 - **Pontszám 0–100**: látod, mennyire jó az adott ajánlat.
-- **Tesztelt**: 66 unit teszt, valódi Hardverapró HTML-lel.
+- **Tesztelt**: 82 unit teszt, valódi Hardverapró HTML-lel.
 
 ---
 
@@ -145,6 +148,7 @@ watches:
       min_price: 80000
       max_price: 600000
       exclude_keywords: [alkatrész, hibás, törött, javított]
+      keyboard: hu              # a külföldi billentyűzetű gépeket kiszűri
       exclude_promoted: true     # fizetett "Előresorolva" hirdetések kihagyása
       allow_business: true       # bolti eladók engedélyezése
       min_seller_rating: 0       # csak nem-negatív értékelésű eladóktól
@@ -172,11 +176,13 @@ profiles:
       min_ram_gb: 16
       min_storage_gb: 512
       min_refresh_hz: 0
+      strict: false            # true: amit nem ismerünk fel, az nem illeszkedik
 ```
 
-Ha egy adat (pl. RAM) nem derül ki a szövegből, az **nem** utasítja el a
-hirdetést – csak nem ad plusz pontot. A `gpu_any` viszont szigorú: ha nincs
-felismerhető GPU, a profil nem illeszkedik.
+Ha egy adat (pl. RAM) nem derül ki a szövegből, az alapból **nem** utasítja el a
+hirdetést – csak nem ad plusz pontot. A `strict: true` ezt fordítja meg: ilyenkor
+csak akkor megy ki a hirdetés, ha az adott érték felismerhető. A `gpu_any`
+mindig szigorú: ha nincs felismerhető GPU, a profil nem illeszkedik.
 
 ### `market_compare` – piaci medián
 
@@ -199,7 +205,7 @@ hirdetésekből számol szintet, és ahhoz viszonyít.
 |---|---|
 | 35 | illeszkedik a profilra |
 | 0–40 | mennyivel van a célár (`deal_price`) alatt; 25%-os kedvezmény = max |
-| 0–25 | felszereltség: 32 GB RAM, 1 TB SSD, 165 Hz, erős GPU, garancia, „új” |
+| 0–25 | felszereltség: 32 GB RAM, 1 TB SSD, 165 Hz, erős GPU, OLED, garancia, magyar billentyűzet, „új” |
 
 `min_score: 50` azt jelenti: profil-egyezés + valami érdemi előny.
 Ha túl kevés jön, vidd lejjebb 40-re; ha túl sok a szemét, emeld 60-ra.
@@ -233,7 +239,7 @@ apro-deal-radar/
 │  ├─ rules.py                 # szűrés, profil, medián, pontozás
 │  ├─ state.py                 # látott hirdetések (dedupe)
 │  └─ notify.py                # Discord embed + küldés
-├─ tests/                      # 66 teszt, valódi HTML fixture-ökkel
+├─ tests/                      # 82 teszt, valódi HTML fixture-ökkel
 ├─ .github/workflows/radar.yml # a cron + futtatás
 └─ state/seen.json             # automatikusan commitolva futás után
 ```

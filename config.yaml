@@ -4,9 +4,8 @@
 #  Minden kulcsszó ékezet- és kis/nagybetű-függetlenül illeszkedik
 #  ("hibas" = "hibás" = "HIBÁS").
 #
-#  A fájl a GitHub Actionből is ezt használja: config.yaml
-#  Ha kísérletezni akarsz, csinálj config.local.yaml-t és indítsd
-#  így:  python -m dealradar --config config.local.yaml
+#  Beállítva: max 450 eFt, RTX 4070 / 5060 / 5070 a sweet spot,
+#  OLED előny, MAGYAR billentyűzet, bármilyen márka, személyes átvétel.
 # ============================================================
 
 settings:
@@ -21,9 +20,10 @@ settings:
   webhook_env: DISCORD_WEBHOOK_URL
 
   # Ennél alacsonyabb pontszámú találatot nem küldünk el.
+  # Túl kevés jön -> 40. Túl sok szemét -> 60.
   min_score: 50
   # Egy futásban max. ennyi értesítést küldünk (spam védelem).
-  max_notifications: 20
+  max_notifications: 15
 
   # Ezeket a hirdetéseket már láttuk -> ne küldjük újra.
   state_file: state/seen.json
@@ -32,15 +32,13 @@ settings:
   # akkor újra szólunk róla. 0 = kikapcsolva.
   renotify_price_drop_percent: 10
 
-  # Egyedi hirdetésoldalak letöltése a jelöltekhez (leírás + állapot).
-  # Ez adja a legpontosabb szűrést, de lassabb.
+  # Egyedi hirdetésoldalak letöltése a jelöltekhez (leírás + állapot
+  # + billentyűzet + garancia). Ez adja a legpontosabb szűrést.
   deep_scan: true
   deep_scan_limit: 40
 
 # ------------------------------------------------------------
 #  HOL keressünk
-#  Bármilyen Hardverapró kategória URL jó. A lapozás:
-#  <url>?offset=100, ?offset=200 ... (max_pages db oldal)
 # ------------------------------------------------------------
 watches:
   - name: "Notebook – minden"
@@ -48,8 +46,12 @@ watches:
     max_pages: 3
     filters:
       min_price: 80000
-      max_price: 600000
-      # Ha ezek bármelyike szerepel a címben/leírásban -> kihagyjuk
+      # A profilok úgyis 450 eFt-nál vágnak, ez csak biztonsági sáv.
+      max_price: 500000
+
+      # Ha ezek bármelyike szerepel a címben/leírásban -> kihagyjuk.
+      # FIGYELEM: a "csere" és a "keresem" szándékosan NINCS itt, mert
+      # szinte minden hirdetésben szerepel ("Csere: nem érdekel").
       exclude_keywords:
         - alkatrész
         - alkatrésznek
@@ -61,26 +63,21 @@ watches:
         - javított
         - vízkár
         - lopott
-        - csere
-        - "keresem"
+
+      # MAGYAR BILLENTYŰZET: a kifejezetten külföldi (német/US/UK)
+      # billentyűzetű gépeket kiszűri. Ha a hirdetés nem írja,
+      # átengedjük – a Discord üzenetben látod, hogy "nem derül ki".
+      keyboard: hu
+
       # Fizetett "Előresorolva" hirdetések kihagyása (általában boltok)
       exclude_promoted: true
       # Bolti (Bazár / üzleti) eladók engedélyezése
       allow_business: true
       # Csak ennyi pozitív értékelés felett (null = bármennyi)
       min_seller_rating: 0
-      # Ha meg van adva, csak ezekben a vármegyékben/városokban
-      # (üres lista = az ország egésze)
+      # Személyes átvétel bárhol az országban -> nincs helyszűrés.
+      # Ha mégis kellene: locations: [budapest, debrecen]
       locations: []
-
-  # Példa második figyelőre (kapcsold be, ha kell):
-  # - name: "Asztali PC alkatrész – VGA"
-  #   url: "https://hardverapro.hu/aprok/hardver/videokartya/index.html"
-  #   max_pages: 2
-  #   filters:
-  #     min_price: 30000
-  #     max_price: 200000
-  #     exclude_keywords: [hibás, alkatrész, törött]
 
 # ------------------------------------------------------------
 #  MI számít jó dealnek
@@ -95,61 +92,63 @@ watches:
 #  Pontszám (0-100):
 #    35  profil illeszkedés
 #    40  ár-előny a `deal_price`-hoz képest (vagy a piaci mediánhoz)
-#    25  felszereltség (RAM, SSD, GPU, Hz, gari, új állapot)
-#  A `min_score` felettiek mennek ki Discordra.
+#    25  felszereltség: RAM, SSD, GPU, Hz, OLED, gari, magyar bill.
 # ------------------------------------------------------------
 profiles:
-  - name: "Legion 5 / 5 Pro – jó ár"
-    any_keywords: ["legion 5", "legion5", "legion 5 pro"]
-    all_keywords: []
-    none_keywords: ["alkatrész", "hibás", "törött"]
-    min_price: 120000
-    max_price: 430000
-    # Ez alatt az ár alatt igazi vétel. Ha nincs megadva, a piaci
-    # mediánt használjuk viszonyítási alapnak.
-    deal_price: 340000
-    specs:
-      gpu_any: ["3060", "3070", "3080", "4060", "4070", "5050", "5060"]
-      min_ram_gb: 16
-      min_storage_gb: 512
-
-  - name: "Legion 7 / Slim – jó ár"
-    any_keywords: ["legion 7", "legion7", "legion slim", "legion 9"]
-    all_keywords: []
-    none_keywords: ["alkatrész", "hibás", "törött"]
-    min_price: 150000
-    max_price: 600000
-    deal_price: 480000
-    specs:
-      gpu_any: ["4060", "4070", "4080", "4090", "5060", "5070", "5080"]
-      min_ram_gb: 16
-      min_storage_gb: 512
-
-  - name: "Bármilyen gamer – RTX 4070 vagy újabb, jó áron"
+  # 1) A sweet spot: 4070 / 5050 / 5060 / 5070 alatt 450 eFt
+  - name: "Sweet spot – RTX 4070 / 5050 / 5060 / 5070, 450 alatt"
     any_keywords: []
     all_keywords: []
-    none_keywords: ["alkatrész", "hibás", "törött"]
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 150000
-    max_price: 550000
-    deal_price: 430000
+    max_price: 450000
+    deal_price: 390000
     specs:
-      gpu_any: ["4070", "4080", "4090", "5070", "5080", "5090"]
+      gpu_any: ["4070", "5050", "5060", "5070", "4080", "5080"]
       min_ram_gb: 16
       min_storage_gb: 512
 
-  - name: "Olcsó Legion – bármi, nagyon jó áron"
-    any_keywords: ["legion"]
+  # 2) Közép-kategória jó áron
+  - name: "Közép gamer – RTX 4060 / 3070 / 5050, 360 alatt"
+    any_keywords: []
     all_keywords: []
-    none_keywords: ["alkatrész", "hibás", "törött"]
-    min_price: 80000
-    max_price: 300000
-    deal_price: 240000
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 120000
+    max_price: 360000
+    deal_price: 300000
     specs:
-      min_ram_gb: 8
-      min_storage_gb: 256
+      gpu_any: ["4060", "3060", "3070", "5050"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  # 3) OLED – bármilyen gép, akár nem gamer
+  - name: "OLED bármilyen gép – 450 alatt"
+    any_keywords: []
+    all_keywords: ["oled"]
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 120000
+    max_price: 450000
+    deal_price: 380000
+    specs:
+      min_ram_gb: 16
+
+  # 4) Érték-alapú: nagy RAM + nagy SSD olcsón (üzleti / nem gamer is)
+  #    A `strict: true` miatt csak akkor küldi, ha a 32 GB RAM és az
+  #    1 TB SSD tényleg felismerhető a hirdetésből.
+  - name: "Üzleti érték – 32 GB RAM + 1 TB SSD, 320 alatt"
+    any_keywords: []
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 100000
+    max_price: 320000
+    deal_price: 260000
+    specs:
+      min_ram_gb: 32
+      min_storage_gb: 1024
+      strict: true
 
 # ------------------------------------------------------------
-#  Piaci medián összehasonlítás (opcionális, de ajánlott)
+#  Piaci medián összehasonlítás
 #  A futás során látott hirdetésekből számol egy medián árat
 #  GPU-osztályonként, és ha egy hirdetés ennél jóval olcsóbb,
 #  plusz pontot ad. Így nem kell minden árat kézzel belőni.

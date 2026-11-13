@@ -31,6 +31,20 @@ GB_TOKEN_RE = re.compile(r"\b(\d{1,4})\s*(GB|TB)\b", re.I)
 HZ_RE = re.compile(r"\b(\d{2,3})\s*Hz\b", re.I)
 SCREEN_RE = re.compile(r"(\d{1,2}(?:[.,]\d)?)\s*(?:\"|”|inch\b|hüvelyk\b|col\b)", re.I)
 
+OLED_RE = re.compile(r"\boled\b", re.I)
+
+# "külföldi / német / US billentyűzet" – ezt ki kell szűrni, ha magyar kell
+FOREIGN_KB_RE = re.compile(
+    r"(kulfoldi billentyu|nem magyar billentyu|nemet billentyu|usz billentyu|"
+    r"us billentyu|uk billentyu|angol billentyu|nemet kiosztas|us kiosztas|"
+    r"uk kiosztas|kulfoldi kiosztas|kiosztas\s*:\s*(us|uk|de|nemet|angol|kulfoldi))"
+)
+HU_KB_RE = re.compile(
+    r"(magyar billentyu|magyar kiosztas|magyar bill\.|magyar keyboard|"
+    r"hun billentyu|hu billentyu|magyarra lezerezve|magyarra lezerezett|"
+    r"\bhungarian keyboard\b|\bhungarian layout\b|\bHUN\b)"
+)
+
 STORAGE_VALUES = {120, 128, 240, 256, 320, 480, 500, 512, 640, 750, 1000, 1024, 2048, 4096}
 RAM_VALUES = {4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128}
 
@@ -66,38 +80,57 @@ def _find_cpu(text: str) -> str | None:
     return None
 
 
+def _context_ok(text: str, start: int, end: int) -> bool:
+    """Kiszűri a 'max 32 GB-ig bővíthető' típusú csapdákat."""
+    before = norm(text[max(0, start - 25) : start])
+    after = norm(text[end : end + 14])
+    if re.search(r"(bovithet|tamogat|max|maximum)[^0-9]{0,12}$", before):
+        return False
+    if re.search(r"^\s*-?\s*ig\b", after):
+        return False
+    return True
+
+
 def _find_ram(text: str, title: str) -> int | None:
-    match = RAM_CTX_RE.search(text) or RAM_LABEL_RE.search(text)
-    if match:
-        value = int(match.group(1))
-        if value in RAM_VALUES or 1 <= value <= 256:
-            return value
+    for regex in (RAM_CTX_RE, RAM_LABEL_RE):
+        for match in regex.finditer(text):
+            if not _context_ok(text, match.start(), match.end()):
+                continue
+            value = int(match.group(1))
+            if 1 <= value <= 256:
+                return value
     # tartalék: "16GB / 512GB" típusú címek
-    tokens = [(int(v), unit.upper()) for v, unit in GB_TOKEN_RE.findall(title)]
-    for value, unit in tokens:
+    tokens = [
+        (int(m.group(1)), m.group(2).upper(), m.start(), m.end())
+        for m in GB_TOKEN_RE.finditer(title)
+    ]
+    tokens = [t for t in tokens if _context_ok(title, t[2], t[3])]
+    for value, unit, _, _ in tokens:
         if unit == "GB" and value in RAM_VALUES:
             # ha van mellette nagyobb tároló token, ez a RAM
-            if any(u == "TB" or (u == "GB" and v >= 240) for v, u in tokens):
+            if any(u == "TB" or (u == "GB" and v >= 240) for v, u, _, _ in tokens):
                 return value
     return None
 
 
 def _find_storage(text: str, title: str) -> int | None:
-    for regex in (STORAGE_CTX_RE, STORAGE_LABEL_RE):
-        match = regex.search(text)
-        if match:
+    for regex in (STORAGE_CTX_RE, STORAGE_LABEL_RE, TB_RE):
+        for match in regex.finditer(text):
+            if not _context_ok(text, match.start(), match.end()):
+                continue
             value = int(match.group(1))
-            unit = match.group(2).upper()
+            unit = match.group(2).upper() if match.lastindex and match.lastindex >= 2 else "TB"
             return value * 1024 if unit == "TB" else value
-    match = TB_RE.search(text)
-    if match:
-        return int(match.group(1)) * 1024
     # tartalék: címben "32GB 1TB" vagy "16GB/512GB"
-    tokens = [(int(v), unit.upper()) for v, unit in GB_TOKEN_RE.findall(title)]
-    for value, unit in tokens:
+    tokens = [
+        (int(m.group(1)), m.group(2).upper(), m.start(), m.end())
+        for m in GB_TOKEN_RE.finditer(title)
+    ]
+    tokens = [t for t in tokens if _context_ok(title, t[2], t[3])]
+    for value, unit, _, _ in tokens:
         if unit == "TB":
             return value * 1024
-    for value, unit in tokens:
+    for value, unit, _, _ in tokens:
         if unit == "GB" and value in STORAGE_VALUES and value >= 240:
             return value
     return None
@@ -137,6 +170,15 @@ def _is_new(text: str) -> bool:
     return bool(re.search(r"\buj\b", n))
 
 
+def _find_keyboard(text: str) -> str | None:
+    n = norm(text)
+    if HU_KB_RE.search(n):
+        return "hu"
+    if FOREIGN_KB_RE.search(n):
+        return "foreign"
+    return None
+
+
 def extract(text: str, title: str | None = None) -> Specs:
     """Specifikációk kinyerése a címből + leírásból."""
     title = title if title is not None else text
@@ -147,6 +189,8 @@ def extract(text: str, title: str | None = None) -> Specs:
         storage_gb=_find_storage(text, title),
         refresh_hz=_find_refresh(text),
         screen_inch=_find_screen(text),
+        oled=bool(OLED_RE.search(text)),
+        keyboard=_find_keyboard(text),
         is_new=_is_new(text),
         warranty=_has_warranty(text),
     )

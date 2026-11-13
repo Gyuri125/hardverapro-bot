@@ -53,6 +53,8 @@ class WatchedFilters:
     allow_business: bool = True
     min_seller_rating: int | None = None
     locations: list[str] = field(default_factory=list)
+    # "any" = mindegy; "hu" = a kifejezetten külföldi billentyűzetű gépeket kiszűri
+    keyboard: str = "any"
 
 
 @dataclass
@@ -75,6 +77,9 @@ class ProfileSpecs:
     min_ram_gb: int = 0
     min_storage_gb: int = 0
     min_refresh_hz: int = 0
+    # Ha true: amit nem ismerünk fel, az nem illeszkedik (szigorú).
+    # Ha false: az ismeretlen érték nem utasítja el a hirdetést.
+    strict: bool = False
 
 
 @dataclass
@@ -169,6 +174,17 @@ def _as_str_list(value: Any, where: str) -> list[str]:
     return out
 
 
+def _as_keyboard(value: Any, where: str) -> str:
+    if value is None:
+        return "any"
+    text = str(value).strip().lower()
+    if text in {"any", "mindegy", "mind"}:
+        return "any"
+    if text in {"hu", "hun", "magyar"}:
+        return "hu"
+    raise ConfigError(f"{where}: 'any' vagy 'hu' lehet, ez nem az: {value!r}")
+
+
 def _load_filters(raw: Any, where: str) -> WatchedFilters:
     if raw is None:
         return WatchedFilters()
@@ -186,6 +202,7 @@ def _load_filters(raw: Any, where: str) -> WatchedFilters:
             else _as_int(data.get("min_seller_rating"), f"{where}.min_seller_rating")
         ),
         locations=_as_str_list(data.get("locations"), f"{where}.locations"),
+        keyboard=_as_keyboard(data.get("keyboard"), f"{where}.keyboard"),
     )
 
 
@@ -213,6 +230,7 @@ def _load_specs(raw: Any, where: str) -> ProfileSpecs:
         min_ram_gb=_as_int(data.get("min_ram_gb"), f"{where}.min_ram_gb", 0),
         min_storage_gb=_as_int(data.get("min_storage_gb"), f"{where}.min_storage_gb", 0),
         min_refresh_hz=_as_int(data.get("min_refresh_hz"), f"{where}.min_refresh_hz", 0),
+        strict=_as_bool(data.get("strict"), f"{where}.strict", False),
     )
 
 
@@ -234,10 +252,17 @@ def _load_profile(raw: Any, index: int) -> Profile:
         ),
         specs=_load_specs(data.get("specs"), f"{where}.specs"),
     )
-    if not (profile.any_keywords or profile.all_keywords or profile.specs.gpu_any):
+    if not (
+        profile.any_keywords
+        or profile.all_keywords
+        or profile.specs.gpu_any
+        or profile.specs.cpu_any
+        or profile.specs.min_ram_gb
+        or profile.specs.min_storage_gb
+    ):
         raise ConfigError(
             f"{where}: a profil semmire nem illeszkedne – kell legalább egy "
-            f"any_keywords / all_keywords / specs.gpu_any"
+            f"any_keywords / all_keywords / specs megkötés"
         )
     if profile.min_price > profile.max_price:
         raise ConfigError(f"{where}: min_price nagyobb, mint max_price")

@@ -253,9 +253,11 @@ def run(args: argparse.Namespace) -> int:
 
     sent = 0
     if new_hits:
-        sent = send(webhook or "", new_hits, dry_run=args.dry_run or not webhook)
-        for hit in new_hits:
-            state.mark(hit)
+        dry = args.dry_run or not webhook
+        sent = send(webhook or "", new_hits, dry_run=dry)
+        if not dry:
+            for hit in new_hits:
+                state.mark(hit)
 
     state.save()
     log.info("Kész. Elküldve: %d, state mérete: %d", sent, len(state))

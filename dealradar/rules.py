@@ -29,6 +29,8 @@ def passes_filters(listing: Listing, filters: WatchedFilters) -> bool:
         return False
     if listing.intent and "keres" in norm(listing.intent):
         return False
+    if filters.keyboard == "hu" and listing.specs.keyboard == "foreign":
+        return False
 
     text = norm(listing.text)
     if filters.include_keywords and not any(norm(k) in text for k in filters.include_keywords):
@@ -71,6 +73,15 @@ def _cpu_matches(listing: Listing, wanted: list[str]) -> bool:
     return any(norm(w) in cpu for w in wanted)
 
 
+def _min_ok(actual: int | None, required: int, strict: bool) -> bool:
+    """minimum-kritérium; ismeretlen érték strict módban elutasít."""
+    if not required:
+        return True
+    if actual is None:
+        return not strict
+    return actual >= required
+
+
 def match_profile(listing: Listing, profile: Profile) -> tuple[bool, list[str]]:
     """Illeszkedik-e a hirdetés a profilra? Visszaadja az okokat is."""
     if listing.price is None:
@@ -92,15 +103,12 @@ def match_profile(listing: Listing, profile: Profile) -> tuple[bool, list[str]]:
     if not _cpu_matches(listing, specs.cpu_any):
         return False, []
 
-    if specs.min_ram_gb and listing.specs.ram_gb is not None:
-        if listing.specs.ram_gb < specs.min_ram_gb:
-            return False, []
-    if specs.min_storage_gb and listing.specs.storage_gb is not None:
-        if listing.specs.storage_gb < specs.min_storage_gb:
-            return False, []
-    if specs.min_refresh_hz and listing.specs.refresh_hz is not None:
-        if listing.specs.refresh_hz < specs.min_refresh_hz:
-            return False, []
+    if not _min_ok(listing.specs.ram_gb, specs.min_ram_gb, specs.strict):
+        return False, []
+    if not _min_ok(listing.specs.storage_gb, specs.min_storage_gb, specs.strict):
+        return False, []
+    if not _min_ok(listing.specs.refresh_hz, specs.min_refresh_hz, specs.strict):
+        return False, []
 
     reasons: list[str] = []
     if profile.any_keywords:
@@ -190,6 +198,12 @@ def _spec_points(listing: Listing) -> tuple[int, list[str]]:
     if specs.warranty:
         points += 4
         reasons.append("garanciás")
+    if specs.oled:
+        points += 3
+        reasons.append("OLED")
+    if specs.keyboard == "hu":
+        points += 3
+        reasons.append("magyar billentyűzet")
 
     return min(points, 25), reasons
 
