@@ -32,7 +32,7 @@ GitHub Actions (cron 3x/nap)
 - **Nincs spam**: amit már elküldött, azt nem küldi újra (kivéve, ha az ára
   jelentősen lecsökkent).
 - **Pontszám 0–100**: látod, mennyire jó az adott ajánlat.
-- **Tesztelt**: 62 unit teszt, valódi Hardverapró HTML-lel.
+- **Tesztelt**: 66 unit teszt, valódi Hardverapró HTML-lel.
 
 ---
 
@@ -233,7 +233,7 @@ apro-deal-radar/
 │  ├─ rules.py                 # szűrés, profil, medián, pontozás
 │  ├─ state.py                 # látott hirdetések (dedupe)
 │  └─ notify.py                # Discord embed + küldés
-├─ tests/                      # 62 teszt, valódi HTML fixture-ökkel
+├─ tests/                      # 66 teszt, valódi HTML fixture-ökkel
 ├─ .github/workflows/radar.yml # a cron + futtatás
 └─ state/seen.json             # automatikusan commitolva futás után
 ```
