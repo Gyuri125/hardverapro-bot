@@ -76,10 +76,10 @@ def _gpu_field(hit: Hit) -> str:
 def _keyboard_field(hit: Hit) -> str:
     keyboard = hit.listing.specs.keyboard
     if keyboard == "hu":
-        return "✅ magyar"
+        return "magyar (a hirdetés szerint)"
     if keyboard == "foreign":
-        return "❌ külföldi"
-    return "⚠️ **nem derül ki**\nkérdezz rá az eladónál"
+        return "külföldi"
+    return "**nem derül ki**\nkérdezz rá az eladónál"
 
 
 def build_embed(hit: Hit) -> dict:
@@ -152,7 +152,7 @@ def _post(session: requests.Session, webhook: str, payload: dict) -> None:
 def send_test(webhook: str, *, dry_run: bool = False) -> int:
     """Egyetlen tesztüzenet a webhook működésének ellenőrzésére."""
     payload = {
-        "content": "✅ **apro-deal-radar** – a webhook működik. Innentől jönnek a találatok.",
+        "content": "**apro-deal-radar** – a webhook működik. Innentől jönnek a találatok.",
         "embeds": [
             {
                 "title": "Teszt értesítés",
@@ -193,7 +193,7 @@ def send(webhook: str, hits: list[Hit], *, dry_run: bool = False) -> int:
         embeds = [build_embed(hit) for hit in chunk]
         content = None
         if index == 0:
-            content = f"🎯 **{len(hits)} új jó deal** a Hardveraprón" + (
+            content = f"**{len(hits)} új találat** a Hardveraprón" + (
                 f" – összesen {len(chunks)} üzenet" if len(chunks) > 1 else ""
             )
         payload: dict = {"embeds": embeds}

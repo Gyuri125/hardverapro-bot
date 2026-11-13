@@ -59,7 +59,7 @@ def test_unknown_keyboard_is_highlighted():
 
 
 def test_hungarian_keyboard_is_confirmed():
-    assert fields_of(build_embed(make_hit(keyboard="hu")))["Billentyűzet"] == "✅ magyar"
+    assert fields_of(build_embed(make_hit(keyboard="hu")))["Billentyűzet"] == "magyar (a hirdetés szerint)"
 
 
 def test_specs_link_present():
