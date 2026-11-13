@@ -35,7 +35,7 @@ GitHub Actions (cron 3x/nap)
 - **Nincs spam**: amit már elküldött, azt nem küldi újra (kivéve, ha az ára
   jelentősen lecsökkent).
 - **Pontszám 0–100**: látod, mennyire jó az adott ajánlat.
-- **Tesztelt**: 82 unit teszt, valódi Hardverapró HTML-lel.
+- **Tesztelt**: 86 unit teszt, valódi Hardverapró HTML-lel.
 
 ---
 
@@ -88,6 +88,22 @@ A cron ütemezés a `main` branch-en automatikusan él:
 ---
 
 ## Helyi futtatás
+
+### 1. A webhook beállítása: `.env`
+
+A repóban van egy `.env` fájl, ami **nincs** a gitben (a `.gitignore` kizárja).
+Nyisd meg és írd be a webhookot az egyenlőségjel után, szóköz és idézőjel nélkül:
+
+```ini
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/123456/abcDEF...
+```
+
+Ennyi. A program indításkor automatikusan beolvassa. Ha véletlenül elfelejtenéd,
+a `.env.example` mutatja a formátumot.
+
+> Ha a PowerShellben is be van állítva ugyanez a változó (`$env:DISCORD_WEBHOOK_URL`),
+> az erősebb, és a `.env` értékét figyelmen kívül hagyja.
+> GitHubon nincs `.env` – ott a **Secret**ből jön.
 
 ```bash
 python -m pip install -r requirements.txt
@@ -239,7 +255,7 @@ apro-deal-radar/
 │  ├─ rules.py                 # szűrés, profil, medián, pontozás
 │  ├─ state.py                 # látott hirdetések (dedupe)
 │  └─ notify.py                # Discord embed + küldés
-├─ tests/                      # 82 teszt, valódi HTML fixture-ökkel
+├─ tests/                      # 86 teszt, valódi HTML fixture-ökkel
 ├─ .github/workflows/radar.yml # a cron + futtatás
 └─ state/seen.json             # automatikusan commitolva futás után
 ```

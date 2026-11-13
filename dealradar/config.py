@@ -14,6 +14,41 @@ class ConfigError(Exception):
     """Hibás konfiguráció."""
 
 
+def load_dotenv(path: str | Path | None = None) -> bool:
+    """Egyszerű `.env` beolvasó, külső csomag nélkül.
+
+    - csak akkor állít be egy változót, ha az még nincs a környezetben
+      (tehát a GitHub Secret / exportált változó mindig erősebb),
+    - támogatja a `#` kommenteket, az üres sorokat és az idézőjeleket,
+    - ha nincs fájl, csendben nem csinál semmit.
+
+    Visszaadja, hogy talált-e és beolvasott-e fájlt.
+    """
+    file = Path(path) if path else Path(".env")
+    if not file.is_file():
+        return False
+
+    try:
+        content = file.read_text(encoding="utf-8-sig")
+    except OSError:
+        return False
+
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        if key.startswith("export "):
+            key = key[len("export ") :].strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+    return True
+
+
 # --------------------------------------------------------------------------
 #  settings
 # --------------------------------------------------------------------------

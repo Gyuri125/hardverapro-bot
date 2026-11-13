@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from .config import Config, ConfigError, load_config
+from .config import Config, ConfigError, load_config, load_dotenv
 from .fetch import FetchError, Fetcher
 from .models import Hit, Listing
 from .notify import format_huf, send, send_test
@@ -184,6 +184,11 @@ def build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> int:
     _setup_logging(args.verbose)
 
+    # Helyi fejlesztéshez: a .env fájlból is beolvassa a webhookot.
+    # GitHubon nincs .env, ott a Secretből jön.
+    if load_dotenv():
+        log.debug(".env betöltve")
+
     config = load_config(args.config)
 
     webhook = config.settings.webhook_url
@@ -270,6 +275,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return run(args)
     except (ConfigError, FetchError) as exc:
+        log.error("%s", exc)
+        return 1
+    except RuntimeError as exc:
+        # pl. Discord hiba / rate limit
         log.error("%s", exc)
         return 1
     except KeyboardInterrupt:  # pragma: no cover
