@@ -25,8 +25,13 @@ GitHub Actions (cron 3x/nap)
 - **Profilok**: megmondod, mi érdekel (pl. „Legion 5, RTX 4060/4070, max 430 eFt”),
   a program csak azokat küldi.
 - **Magyar billentyűzet**: a kifejezetten külföldi (német/US/UK) billentyűzetű
-  gépeket kiszűri, a magyart pedig jelzi az értesítésben.
+  gépeket kiszűri; ha a hirdetés nem írja, az értesítésben nagy **⚠️ nem derül ki**
+  figyelmeztetés jelzi, hogy kérdezz rá az eladónál.
 - **OLED-felismerés**: a feliratból kiderül, és plusz pontot ad.
+- **Benchmark**: PassMark **CPU Mark** a processzorhoz és **G3D Mark** a
+  videokártyához (laptopos GPU-változattal).
+- **Kattintható linkek**: a CPU neve a gyártó (Intel/AMD) oldalára visz, a GPU a
+  PassMark adatlapjára, plusz egy „Specifikáció” keresőlink.
 - **Ékezet-független** keresés: a „hibás” szűrő a „HIBAS”-t is elkapja.
 - **Piaci medián**: a futás során látott hirdetésekből számol árszintet
   GPU-osztályonként, és jelzi, ha valami feltűnően olcsó.
@@ -227,6 +232,40 @@ hirdetésekből számol szintet, és ahhoz viszonyít.
 Ha túl kevés jön, vidd lejjebb 40-re; ha túl sok a szemét, emeld 60-ra.
 
 ---
+
+## Hogyan néz ki egy értesítés?
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Eladó Lenovo Legion 5 15ACH6H RTX 4060 i7-14700HX 32GB 1TB  │
+│ 32 GB RAM · 1 TB SSD · 165 Hz · garanciás · használt        │
+│                                                             │
+│ Ár: 349 000 Ft   Célár: 390 000 Ft   Pontszám: 78/100       │
+│ Processzor: [i7-14700HX](intel.com)  Videokártya:           │
+│   CPU Mark: 36 314                   [RTX 4060](passmark)   │
+│                                      G3D Mark: 17 306      │
+│ Billentyűzet: ⚠️ nem derül ki                               │
+│ Hely: Budapest   Eladó: Teszt Elek (+22)   Specifikáció: ↗  │
+│ Miért jó: ár 10%-kal a célár alatt · 32 GB RAM · 165 Hz     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+A **Billentyűzet** mező háromféle lehet:
+
+| Érték | Jelentés |
+|---|---|
+| ✅ magyar | a hirdetés kimondja, hogy magyar |
+| ⚠️ nem derül ki | nem írja – **kérdezz rá az eladónál** |
+| ❌ külföldi | ki sem kerül, a szűrő eldobja |
+
+## Honnan jönnek az adatok?
+
+- **Hirdetések**: hardverapro.hu nyilvános kategóriaoldalai.
+- **Benchmark**: [PassMark](https://www.cpubenchmark.net/) – modellenként egy-egy
+  kérés, csak arra a néhány találatra, amit tényleg elküldünk. Ha a PassMark nem
+  elérhető, a pontszám kimarad, a találat ettől még kimegy.
+- **Specifikáció link**: Google-keresés a modell nevére (mindig működik, nem
+  függ a gyártó oldalának felépítésétől).
 
 ## Etikett és korlátok
 

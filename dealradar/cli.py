@@ -7,6 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
+from .benchmarks import Benchmarks
 from .config import Config, ConfigError, load_config, load_dotenv
 from .fetch import FetchError, Fetcher
 from .models import Hit, Listing
@@ -141,16 +142,32 @@ def evaluate(config: Config, listings: list[Listing]) -> list[Hit]:
 # --------------------------------------------------------------------------
 
 
+def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> None:
+    """PassMark CPU Mark / G3D Mark pontszámok a találatokhoz (best effort)."""
+    bench = Benchmarks(fetcher)
+    for hit in hits:
+        specs = hit.listing.specs
+        hit.cpu_bench = bench.cpu(specs.cpu)
+        hit.gpu_bench = bench.gpu(specs.gpus[0] if specs.gpus else None)
+        log.debug(
+            "benchmark: %s -> CPU %s, GPU %s",
+            hit.listing.title[:40],
+            hit.cpu_bench.score if hit.cpu_bench else "nincs",
+            hit.gpu_bench.score if hit.gpu_bench else "nincs",
+        )
+
+
 def print_table(hits: list[Hit], limit: int = 25) -> None:
     if not hits:
         print("Nincs a pontszám-küszöböt elérő találat.")
         return
     print()
-    print(f"{'PONT':>5}  {'ÁR':>13}  {'PROFIL':<34}  CÍM")
-    print("-" * 120)
+    print(f"{'PONT':>5}  {'ÁR':>13}  {'CPU':>7}  {'PROFIL':<34}  CÍM")
+    print("-" * 128)
     for hit in hits[:limit]:
         price = format_huf(hit.listing.price)
-        print(f"{hit.score:5d}  {price:>13}  {hit.profile[:34]:<34}  {hit.listing.title[:60]}")
+        cpu = str(hit.cpu_bench.score) if hit.cpu_bench else "–"
+        print(f"{hit.score:5d}  {price:>13}  {cpu:>7}  {hit.profile[:34]:<34}  {hit.listing.title[:56]}")
     if len(hits) > limit:
         print(f"... és további {len(hits) - limit} találat")
     print()
@@ -245,6 +262,10 @@ def run(args: argparse.Namespace) -> int:
         log.info("%d találat már ismert, kihagyva", skipped)
 
     new_hits = new_hits[: config.settings.max_notifications]
+
+    if new_hits:
+        attach_benchmarks(fetcher, new_hits)
+
     print_table(hits if args.show_all else new_hits)
 
     if not webhook:

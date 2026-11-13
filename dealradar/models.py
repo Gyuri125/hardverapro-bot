@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # csak típusellenőrzéshez, futásidőben nem kell importálni
+    from .benchmarks import BenchResult
 
 
 @dataclass
@@ -48,6 +52,25 @@ class Specs:
             parts.append("magyar billentyűzet")
         elif self.keyboard == "foreign":
             parts.append("NEM magyar billentyűzet")
+        return " · ".join(parts)
+
+    def details(self) -> str:
+        """Rövid felsorolás a Discord leíráshoz (CPU/GPU nélkül, az külön mező)."""
+        parts: list[str] = []
+        if self.ram_gb:
+            parts.append(f"{self.ram_gb} GB RAM")
+        if self.storage_gb:
+            parts.append(
+                f"{self.storage_gb} GB SSD" if self.storage_gb < 1024 else f"{self.storage_gb // 1024} TB SSD"
+            )
+        if self.refresh_hz:
+            parts.append(f"{self.refresh_hz} Hz")
+        if self.oled:
+            parts.append("OLED")
+        if self.is_new:
+            parts.append("ÚJ")
+        if self.warranty:
+            parts.append("garanciás")
         return " · ".join(parts)
 
     @property
@@ -142,3 +165,5 @@ class Hit:
     reasons: list[str] = field(default_factory=list)
     target_price: int | None = None
     market_median: int | None = None
+    cpu_bench: BenchResult | None = None
+    gpu_bench: BenchResult | None = None

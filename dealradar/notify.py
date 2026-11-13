@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 
 import requests
 
+from .links import cpu_manufacturer_url, specs_url
 from .models import Hit
 
 log = logging.getLogger(__name__)
@@ -39,9 +41,50 @@ def _color(score: int) -> int:
     return COLOR_OK
 
 
+def _label(text: str) -> str:
+    """Link-felirat biztonságosítása (Discord markdown)."""
+    cleaned = re.sub(r"[\[\]()*_~`|]", "", text or "")
+    return re.sub(r"\s+", " ", cleaned).strip() or "?"
+
+
+def _markdown_number(value: int) -> str:
+    return f"{value:,}".replace(",", " ")
+
+
+def _cpu_field(hit: Hit) -> str:
+    cpu = hit.listing.specs.cpu
+    if not cpu:
+        return "–"
+    url = cpu_manufacturer_url(cpu)
+    name = _label(cpu)
+    value = f"[{name}]({url})" if url else name
+    if hit.cpu_bench:
+        score = _markdown_number(hit.cpu_bench.score)
+        value += f"\nCPU Mark: **[{score}]({hit.cpu_bench.url})**"
+    return value
+
+
+def _gpu_field(hit: Hit) -> str:
+    if not hit.listing.specs.gpus:
+        return "–"
+    name = _label(hit.listing.specs.gpus[0].upper())
+    if hit.gpu_bench:
+        return f"[{name}]({hit.gpu_bench.url})\nG3D Mark: **{_markdown_number(hit.gpu_bench.score)}**"
+    return name
+
+
+def _keyboard_field(hit: Hit) -> str:
+    keyboard = hit.listing.specs.keyboard
+    if keyboard == "hu":
+        return "✅ magyar"
+    if keyboard == "foreign":
+        return "❌ külföldi"
+    return "⚠️ **nem derül ki**\nkérdezz rá az eladónál"
+
+
 def build_embed(hit: Hit) -> dict:
     listing = hit.listing
-    specs = listing.specs.summary()
+    specs = listing.specs
 
     seller = listing.seller or "ismeretlen"
     if listing.seller_rating:
@@ -49,21 +92,24 @@ def build_embed(hit: Hit) -> dict:
     if listing.is_business:
         seller += " · üzlet"
 
-    details = [specs] if specs else []
-    if listing.condition:
-        details.append(listing.condition)
+    details = [part for part in (specs.details(), listing.condition) if part]
     if listing.shipping:
         details.append("csomagküldés")
-
-    description = "\n".join(details)
 
     fields = [
         {"name": "Ár", "value": format_huf(listing.price), "inline": True},
         {"name": "Célár", "value": format_huf(hit.target_price), "inline": True},
         {"name": "Pontszám", "value": f"{hit.score}/100", "inline": True},
+        {"name": "Processzor", "value": _truncate(_cpu_field(hit), 1024), "inline": True},
+        {"name": "Videokártya", "value": _truncate(_gpu_field(hit), 1024), "inline": True},
+        {"name": "Billentyűzet", "value": _keyboard_field(hit), "inline": True},
         {"name": "Hely", "value": _truncate(listing.location or "–", 100), "inline": True},
         {"name": "Eladó", "value": _truncate(seller, 100), "inline": True},
-        {"name": "Profil", "value": _truncate(hit.profile, 100), "inline": True},
+        {
+            "name": "Specifikáció",
+            "value": f"[Megnézem]({specs_url(listing.title)})",
+            "inline": True,
+        },
     ]
     if hit.reasons:
         fields.append(
@@ -77,7 +123,7 @@ def build_embed(hit: Hit) -> dict:
     return {
         "title": _truncate(listing.title, 250),
         "url": listing.url_abs,
-        "description": _truncate(description, 400),
+        "description": _truncate(" · ".join(details), 400),
         "color": _color(hit.score),
         "fields": fields,
         "footer": {"text": _truncate(f"Hardverapró · {listing.posted or 'ismeretlen időpont'}", 200)},
