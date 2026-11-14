@@ -1,5 +1,21 @@
 {
  "items": {
+  "7636401": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 250000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 64,
+   "title": "ACER NITRO 5 - Modern Gamer Laptop i5-13420H Rtx 4050 6GB 16GB DDR5 144Hz"
+  },
+  "7700309": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 180000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 93,
+   "title": "ASUS TUF Gaming A15 Ryzen 5 4600H RTX 3050 16GB 512GB SSD 144Hz"
+  },
   "7748598": {
    "first_seen": "2026-11-14T10:32:40+00:00",
    "notified_at": "2026-11-14T10:32:40+00:00",
@@ -7,6 +23,14 @@
    "profile": "Közép gamer – RTX 4060 / 3070 / 5050, 360 alatt",
    "score": 62,
    "title": "Lenovo Legion 5 - 15.6\" FullHD 165Hz - Ryzen 5 5600H - 16GB - 512GB - RTX 3060 - Win11 - MAGYAR"
+  },
+  "7751845": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 229990,
+   "profile": "OLED bármilyen gép – 450 alatt",
+   "score": 97,
+   "title": "Dobozos Asus VivoBook S 15 Laptop 15,6\" -35% Snapdragon X Plus 8 Mag 16/512 3K OLED 120Hz"
   },
   "7763390": {
    "first_seen": "2026-11-14T10:32:40+00:00",
@@ -23,6 +47,14 @@
    "profile": "Sweet spot – RTX 4070 / 5050 / 5060 / 5070, 450 alatt",
    "score": 50,
    "title": "Új ASUS 2029ig Garis Magyar Gamer Laptop 16\" 144hz Intel 7 240H RTX 5050 8GB 3ciklus! Új ára 600e!!"
+  },
+  "7770988": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 333000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 75,
+   "title": "ERAZER Defender P50 GAMING /NVIDIA RTX4060, 16GB RAM, i7-12650H, 1 TB SSD/ GYÁRI DOBOZÁBAN!"
   },
   "7772700": {
    "first_seen": "2026-11-14T10:32:40+00:00",
@@ -56,6 +88,14 @@
    "score": 82,
    "title": "Új bontatlan MSI CYBORG 15 i7-13620H, RTX 5050 8GB, 16GB RAM, 512GB SSD, Garancia"
   },
+  "7785711": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 210000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 94,
+   "title": "Asus TUF F15 FX506HE / 15,6\" / i5-11400H / RTX 3050 Ti / 16GB DDR4 / 512GB SSD! BeszámítOK!"
+  },
   "7785949": {
    "first_seen": "2026-11-14T10:32:40+00:00",
    "notified_at": "2026-11-14T10:32:40+00:00",
@@ -80,6 +120,14 @@
    "score": 50,
    "title": "Acer Nitro V 17 - Ryzen7 260, 16GB, 1TB, RTX5060, 2+ év garancia"
   },
+  "7793757": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 449000,
+   "profile": "RTX 4070 / 4080 – 450 alatt",
+   "score": 60,
+   "title": "MSI Pulse 15 Prémium GAMER Laptop 15,6\" QHD 240 Hz/Core i7/16GB/1 TB SSD/RTX4070/WIN11"
+  },
   "7794335": {
    "first_seen": "2026-11-14T11:19:53+00:00",
    "notified_at": "2026-11-14T11:19:53+00:00",
@@ -103,8 +151,16 @@
    "profile": "Közép gamer – RTX 4060 / 3070 / 5050, 360 alatt",
    "score": 82,
    "title": "Acer Nitro 5 AN515-45 - 32GB DDR4 3200MHz, Ryzen 5 5600H, RTX 3060 6GB eladó"
+  },
+  "7798184": {
+   "first_seen": "2026-11-14T19:14:30+00:00",
+   "notified_at": "2026-11-14T19:14:30+00:00",
+   "price": 375000,
+   "profile": "RTX 4070 / 4080 – 450 alatt",
+   "score": 82,
+   "title": "Clevo T6A notebook eladó elképesztően szép QHD+ kijelzővel RTX4070 145W, i7-12800, 16GB DDR5, 512GB"
   }
  },
- "updated_at": "2026-11-14T11:29:57+00:00",
+ "updated_at": "2026-11-14T19:14:30+00:00",
  "version": 1
 }
