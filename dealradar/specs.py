@@ -75,12 +75,9 @@ HU_KB_RE = re.compile(
     r"hun billentyu|hu billentyu|magyarra lezerezve|magyarra lezerezett|"
     r"\bhungarian keyboard\b|\bhungarian layout\b|\bHUN\b)"
 )
-# Önmagában álló "MAGYAR" a hirdetés végén jellemzően magyar billentyűzetet jelent,
-# de a "magyar garancia", "magyarország", "magyar számla" nem az.
-HU_BARE_RE = re.compile(
-    r"\bmagyar\b(?!\s*(?:garancia|gari|orszag|szamla|nyelv|bolt|ceg|ugyfel|"
-    r"piac|termek|forgalmazo|honlap|oldal|webshop|kereskedo))"
-)
+# Önmagában álló "MAGYAR" csak a hirdetés végén jellemző (pl. "... - MAGYAR"),
+# és csak a címben: a leírásban a "Windows 11 Pro - Magyar" az operációs rendszerre utal.
+HU_BARE_RE = re.compile(r"\bmagyar\b\s*[.!]?\s*$")
 
 STORAGE_VALUES = {120, 128, 240, 256, 320, 480, 500, 512, 640, 750, 1000, 1024, 2048, 4096}
 RAM_VALUES = {4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128}
@@ -240,12 +237,18 @@ def _is_new(text: str) -> bool:
     return bool(re.search(r"\buj\b", n))
 
 
-def _find_keyboard(text: str) -> str | None:
+def _find_keyboard(text: str, title: str | None = None) -> str | None:
     n = norm(text)
-    if HU_KB_RE.search(n) or HU_BARE_RE.search(n):
+    # 1) Kifejezetten magyar (vagy magyarra átalakított) billentyűzet
+    if HU_KB_RE.search(n):
         return "hu"
+    # 2) Kifejezetten külföldi – ez erősebb, mint a leírásban szereplő "magyar"
+    #    (pl. "Windows 11 Pro - Magyar" mellett "Billentyűzet: UK")
     if FOREIGN_KB_RE.search(n):
         return "foreign"
+    # 3) Önmagában "MAGYAR" csak a cím végén számít
+    if title and HU_BARE_RE.search(norm(title)):
+        return "hu"
     return None
 
 
@@ -261,7 +264,7 @@ def extract(text: str, title: str | None = None) -> Specs:
         refresh_hz=_find_refresh(text),
         screen_inch=_find_screen(text),
         oled=bool(OLED_RE.search(text)),
-        keyboard=_find_keyboard(text),
+        keyboard=_find_keyboard(text, title),
         is_new=_is_new(text),
         warranty=_has_warranty(text),
     )

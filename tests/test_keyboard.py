@@ -38,6 +38,20 @@ def test_magyar_with_other_nouns_is_not_keyboard():
     assert extract("Magyar nyelvű Windows").keyboard is None
 
 
+def test_foreign_keyboard_wins_over_hungarian_windows():
+    """A leírásban a Windows lehet magyar, attól a billentyűzet még UK."""
+    text = (
+        "Dell Precision 7670, 16\" FHD+, 32 GB RAM. "
+        "Billentyűzet: UK, világítós. Windows 11 Pro - Magyar, frissen telepítve."
+    )
+    assert extract(text, "Dell Precision 7670 4K OLED IR UK").keyboard == "foreign"
+
+
+def test_hungarian_windows_alone_is_not_a_keyboard():
+    text = "Windows 11 Pro - Magyar, frissen újratelepítve. Szép állapot."
+    assert extract(text, "Dell Precision 7670").keyboard is None
+
+
 def make_listing(text: str) -> Listing:
     listing = Listing(uadid="1", title=text, url="https://x", price=300_000)
     listing.specs = extract(text)
