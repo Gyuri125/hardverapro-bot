@@ -1,10 +1,16 @@
 name: Hardverapró deal radar
 
-# Naponta 3x fut (UTC-ben megadva!). Budapest = UTC+1 (tél) / UTC+2 (nyár),
-# tehát ez kb. 06:10, 12:10 és 18:10 helyi idő.
+# Naponta 3x fut (UTC-ben megadva), plusz egy tartalek idosav.
 on:
   schedule:
-    - cron: "10 5,11,17 * * *"
+    # GitHub a cron-t UTC-ben értelmezi. Budapest = UTC+1 (tél) / UTC+2 (nyár),
+    # ezért ez kb. 06:15, 12:15 és 18:15 helyi idő.
+    #
+    # A masodik sor szandekos tartalek: a GitHub scheduler best-effort,
+    # nagy terhelesnel kihagyhat egy idopontot. A deduplikacio miatt a
+    # tartalek futas nem kuld duplikatumot, csak atveszi a kimaradt idosavot.
+    - cron: "15 5,11,17 * * *"
+    - cron: "45 5,11,17 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -36,10 +42,10 @@ jobs:
 
     steps:
       - name: Repo letöltése
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Python beállítása
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
