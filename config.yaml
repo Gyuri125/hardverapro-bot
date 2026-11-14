@@ -110,6 +110,7 @@ profiles:
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 150000
     max_price: 450000
+    stretch_max_price: 470000
     deal_price: 420000
     specs:
       gpu_any: ["5060", "5070"]
@@ -123,6 +124,7 @@ profiles:
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 150000
     max_price: 450000
+    stretch_max_price: 470000
     deal_price: 400000
     specs:
       gpu_any: ["4070", "4080"]
@@ -175,6 +177,7 @@ profiles:
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 120000
     max_price: 450000
+    stretch_max_price: 470000
     deal_price: 340000
     specs:
       min_ram_gb: 16

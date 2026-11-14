@@ -99,7 +99,10 @@ def match_profile(listing: Listing, profile: Profile) -> tuple[bool, list[str]]:
     """Illeszkedik-e a hirdetés a profilra? Visszaadja az okokat is."""
     if listing.price is None:
         return False, []
-    if not (profile.min_price <= listing.price <= profile.max_price):
+    upper = profile.max_price
+    if profile.stretch_max_price is not None and profile.stretch_max_price > upper:
+        upper = profile.stretch_max_price
+    if not (profile.min_price <= listing.price <= upper):
         return False, []
 
     text = norm(listing.text)
@@ -245,6 +248,18 @@ def score(
     points += spec_points
     reasons.extend(spec_reasons)
 
+    over_budget = bool(
+        profile.stretch_max_price
+        and listing.price is not None
+        and listing.price > profile.max_price
+    )
+    if over_budget:
+        points -= 5
+        reasons.insert(
+            0,
+            f"keret felett: {listing.price:,} Ft (keret {profile.max_price:,} Ft)".replace(",", " "),
+        )
+
     targets: list[int] = []
     if profile.deal_price:
         targets.append(profile.deal_price)
@@ -279,6 +294,8 @@ def score(
         reasons=reasons,
         target_price=target,
         market_median=median,
+        over_budget=over_budget,
+        budget=profile.max_price,
     )
 
 

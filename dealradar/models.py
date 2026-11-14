@@ -167,5 +167,7 @@ class Hit:
     reasons: list[str] = field(default_factory=list)
     target_price: int | None = None
     market_median: int | None = None
+    over_budget: bool = False
+    budget: int | None = None
     cpu_bench: BenchResult | None = None
     gpu_bench: BenchResult | None = None

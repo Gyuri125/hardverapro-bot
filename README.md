@@ -199,6 +199,11 @@ profiles:
 `strict: true` means that a required specification must be recognised; the
 default (`false`) treats unknown values as "not disqualifying".
 
+`stretch_max_price` (optional) opens a small band above `max_price`: a listing
+between the two is still evaluated, but it is flagged as over budget in the
+notification and scores 5 points lower, so it never outranks an in-budget
+equivalent.
+
 ### Scoring
 
 | Points | Source |

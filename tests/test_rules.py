@@ -32,6 +32,15 @@ LEGION = Profile(
     specs=ProfileSpecs(gpu_any=["4060", "4070"], min_ram_gb=16, min_storage_gb=512),
 )
 
+STRETCH = Profile(
+    name="stretch",
+    any_keywords=["legion"],
+    max_price=450_000,
+    stretch_max_price=470_000,
+    deal_price=420_000,
+    specs=ProfileSpecs(gpu_any=["5060"], min_ram_gb=16, min_storage_gb=512),
+)
+
 
 # --------------------------------------------------------------------------
 #  watch szűrők
@@ -167,3 +176,34 @@ def test_best_hit_picks_highest_score():
     hit = best_hit(listing, [strict, generous], compare, {})
     assert hit is not None
     assert hit.profile == "generous"
+
+
+# --------------------------------------------------------------------------
+#  keret feletti (stretch) sáv
+# --------------------------------------------------------------------------
+
+
+def test_stretch_allows_over_budget():
+    listing = make_listing("Lenovo Legion 5 RTX 5060 32GB 1TB", 465_000)
+    assert match_profile(listing, STRETCH)[0]
+
+
+def test_stretch_has_a_hard_ceiling():
+    listing = make_listing("Lenovo Legion 5 RTX 5060 32GB 1TB", 480_000)
+    assert not match_profile(listing, STRETCH)[0]
+
+
+def test_over_budget_is_flagged_and_penalised():
+    compare = MarketCompare(enabled=False)
+    in_budget = make_listing("Lenovo Legion 5 RTX 5060 32GB 1TB", 445_000, uadid="a")
+    over = make_listing("Lenovo Legion 5 RTX 5060 32GB 1TB", 465_000, uadid="b")
+
+    a = score(in_budget, STRETCH, compare, None)
+    b = score(over, STRETCH, compare, None)
+
+    assert a is not None and b is not None
+    assert a.over_budget is False
+    assert b.over_budget is True
+    assert b.budget == 450_000
+    assert b.score < a.score
+    assert any("keret felett" in reason for reason in b.reasons)

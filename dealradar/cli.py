@@ -284,7 +284,10 @@ def print_table(hits: list[Hit], limit: int = 25) -> None:
     for hit in hits[:limit]:
         price = format_huf(hit.listing.price)
         cpu = str(hit.cpu_bench.score) if hit.cpu_bench else "–"
-        print(f"{hit.score:5d}  {price:>13}  {cpu:>7}  {hit.profile[:34]:<34}  {hit.listing.title[:56]}")
+        score = f"{hit.score}{'!' if hit.over_budget else ''}"
+        print(f"{score:>5}  {price:>13}  {cpu:>7}  {hit.profile[:34]:<34}  {hit.listing.title[:56]}")
+    if any(hit.over_budget for hit in hits[:limit]):
+        print("  ! = a beállított árkeret felett, csak kiemelkedő deal esetén")
     if len(hits) > limit:
         print(f"... és további {len(hits) - limit} találat")
     print()

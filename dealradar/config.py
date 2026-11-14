@@ -129,6 +129,9 @@ class Profile:
     none_keywords: list[str] = field(default_factory=list)
     min_price: int = 0
     max_price: int = 10**9
+    # A keret feletti, de még elfogadható sáv (pl. 450 000 helyett 470 000).
+    # Az ilyen találatokat a program külön megjelöli.
+    stretch_max_price: int | None = None
     deal_price: int | None = None
     specs: ProfileSpecs = field(default_factory=ProfileSpecs)
 
@@ -297,6 +300,11 @@ def _load_profile(raw: Any, index: int) -> Profile:
         none_keywords=_as_str_list(data.get("none_keywords"), f"{where}.none_keywords"),
         min_price=_as_int(data.get("min_price"), f"{where}.min_price", 0),
         max_price=_as_int(data.get("max_price"), f"{where}.max_price", 10**9),
+        stretch_max_price=(
+            None
+            if data.get("stretch_max_price") is None
+            else _as_int(data.get("stretch_max_price"), f"{where}.stretch_max_price")
+        ),
         deal_price=(
             None
             if data.get("deal_price") is None

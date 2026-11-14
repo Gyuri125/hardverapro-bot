@@ -112,6 +112,18 @@ def test_empty_hits():
     assert not send("https://pelda.invalid/webhook", [], dry_run=False)
 
 
+def test_over_budget_is_highlighted():
+    hit = make_hit()
+    hit.over_budget = True
+    hit.budget = 450_000
+    hit.listing.price = 465_000
+    embed = build_embed(hit)
+
+    assert embed["color"] == 0x9B59B6
+    assert embed["fields"][0]["name"] == "KERET FELETT"
+    assert "15 000 Ft" in embed["fields"][0]["value"]
+
+
 def test_embeds_are_chunked_under_message_limit():
     from dealradar.notify import MAX_MESSAGE_CHARS, _chunk_embeds, _embed_size
 

@@ -23,6 +23,7 @@ MAX_MESSAGE_CHARS = 5200
 COLOR_GREAT = 0x2ECC71  # zöld
 COLOR_GOOD = 0xF1C40F  # sárga
 COLOR_OK = 0xE67E22  # narancs
+COLOR_OVER_BUDGET = 0x9B59B6  # lila – keret feletti találat
 
 
 def format_huf(value: int | None) -> str:
@@ -114,6 +115,20 @@ def build_embed(hit: Hit) -> dict:
             "inline": True,
         },
     ]
+    if hit.over_budget and listing.price and hit.budget:
+        over = listing.price - hit.budget
+        fields.insert(
+            0,
+            {
+                "name": "KERET FELETT",
+                "value": (
+                    f"**{format_huf(listing.price)}** – {format_huf(over)}-tal a "
+                    f"{format_huf(hit.budget)}-os keret felett. "
+                    "Csak kiemelkedő deal esetén érdemes elgondolkodni rajta."
+                ),
+                "inline": False,
+            },
+        )
     if hit.reasons:
         fields.append(
             {
@@ -127,7 +142,7 @@ def build_embed(hit: Hit) -> dict:
         "title": _truncate(listing.title, 250),
         "url": listing.url_abs,
         "description": _truncate(" · ".join(details), 400),
-        "color": _color(hit.score),
+        "color": COLOR_OVER_BUDGET if hit.over_budget else _color(hit.score),
         "fields": fields,
         "footer": {"text": _truncate(f"Hardverapró · {listing.posted or 'ismeretlen időpont'}", 200)},
         "timestamp": datetime.now(timezone.utc).isoformat(),
