@@ -58,6 +58,12 @@ jobs:
       - name: Tesztek
         run: python -m pytest -q
 
+      - name: Önellenőrzés
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PYTHONIOENCODING: utf-8
+        run: python -m dealradar --self-check --config config.yaml
+
       - name: Radar futtatása
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

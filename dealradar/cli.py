@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
+
+import requests
 
 from .benchmarks import Benchmarks
 from .config import Config, ConfigError, load_config, load_dotenv
@@ -27,6 +30,17 @@ def _setup_logging(verbose: bool) -> None:
         datefmt="%H:%M:%S",
         stream=sys.stderr,
     )
+
+
+def _ci_error(title: str, message: str) -> None:
+    """GitHub Actions annotáció, hogy a hiba okát ne a logban kelljen keresni."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::error title={title}::{message}", flush=True)
+
+
+def _ci_notice(message: str) -> None:
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::notice::{message}", flush=True)
 
 
 # --------------------------------------------------------------------------
@@ -157,6 +171,99 @@ def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> None:
         )
 
 
+def self_check(config: Config) -> int:
+    """Környezet ellenőrzése: konfiguráció, Discord webhook, Hardverapró."""
+    problems = 0
+    log.info("Önellenőrzés indul")
+
+    log.info(
+        "Konfiguráció: %d figyelő, %d profil, min_score=%d",
+        len(config.watches),
+        len(config.profiles),
+        config.settings.min_score,
+    )
+    _ci_notice(f"Konfiguráció rendben: {len(config.watches)} figyelő, {len(config.profiles)} profil")
+
+    # --- Discord webhook ---
+    webhook = config.settings.webhook_url
+    if not webhook:
+        log.error("A %s környezeti változó nincs beállítva", config.settings.webhook_env)
+        _ci_error(
+            "Hiányzó webhook secret",
+            f"A(z) {config.settings.webhook_env} secret nem érhető el. "
+            "Settings -> Secrets and variables -> Actions -> Secrets.",
+        )
+        problems += 1
+    elif not webhook.startswith("https://discord.com/api/webhooks/"):
+        log.error("A webhook URL formátuma hibás")
+        _ci_error(
+            "Hibás webhook URL",
+            "A secret értéke nem https://discord.com/api/webhooks/... formátumú.",
+        )
+        problems += 1
+    else:
+        try:
+            response = requests.get(webhook, timeout=10)
+        except requests.RequestException as exc:
+            log.error("A Discord nem elérhető: %s", exc)
+            _ci_error("Discord nem elérhető", f"Hálózati hiba: {exc}")
+            problems += 1
+        else:
+            if response.status_code == 200:
+                data = response.json()
+                log.info(
+                    "Webhook rendben: %s (csatorna: %s)",
+                    data.get("name") or "(névtelen)",
+                    data.get("channel_id"),
+                )
+                _ci_notice("A Discord webhook érvényes")
+            else:
+                log.error("A webhook ellenőrzése HTTP %s", response.status_code)
+                _ci_error(
+                    "Érvénytelen webhook",
+                    f"A Discord HTTP {response.status_code}-at adott. "
+                    "Lehet, hogy törölték vagy újragenerálták.",
+                )
+                problems += 1
+
+    # --- Hardverapró ---
+    fetcher = Fetcher(
+        user_agent="apro-deal-radar/1.0 (+https://github.com/Gyuri125/hardverapro-bot)",
+        delay=config.settings.request_delay,
+        timeout=config.settings.timeout,
+        retries=config.settings.retries,
+    )
+    try:
+        html = fetcher.get(config.watches[0].url)
+    except FetchError as exc:
+        log.error("A Hardverapró nem elérhető: %s", exc)
+        _ci_error(
+            "Hardverapró nem elérhető",
+            f"{exc}. A GitHub runner IP-címét blokkolhatja az oldal, vagy hálózati hiba van.",
+        )
+        problems += 1
+    else:
+        found = parse_list_page(html)
+        if found:
+            log.info("Hardverapró rendben: %d hirdetés az első oldalon", len(found))
+            _ci_notice(f"Hardverapró rendben: {len(found)} hirdetés az első oldalon")
+        else:
+            log.error("Az oldal letöltődött, de nem találtam hirdetést")
+            _ci_error(
+                "Üres oldal",
+                "A Hardverapró válaszolt, de a parser nem talált hirdetést. "
+                "Valószínűleg megváltozott a HTML.",
+            )
+            problems += 1
+
+    if problems:
+        log.error("Önellenőrzés: %d probléma", problems)
+        return 1
+
+    log.info("Önellenőrzés: minden rendben")
+    return 0
+
+
 def print_table(hits: list[Hit], limit: int = 25) -> None:
     if not hits:
         print("Nincs a pontszám-küszöböt elérő találat.")
@@ -190,6 +297,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--watch", default=None, help="csak azok a figyelők, amelyek nevében szerepel ez a szöveg")
     parser.add_argument("--show-all", action="store_true", help="az összes találat kiírása a küszöb alattiakkal együtt")
     parser.add_argument(
+        "--self-check",
+        action="store_true",
+        help="környezet ellenőrzése (konfiguráció, webhook, Hardverapró), hirdetéskeresés nélkül",
+    )
+    parser.add_argument(
         "--test-webhook",
         action="store_true",
         help="csak egy tesztüzenetet küld a Discord webhookra, majd kilép",
@@ -216,6 +328,9 @@ def run(args: argparse.Namespace) -> int:
             send_test(webhook, dry_run=args.dry_run)
             log.info("Teszt üzenet elküldve.")
         return 0
+
+    if args.self_check:
+        return self_check(config)
 
     if args.watch:
         needle = args.watch.lower()
@@ -297,10 +412,12 @@ def main(argv: list[str] | None = None) -> int:
         return run(args)
     except (ConfigError, FetchError) as exc:
         log.error("%s", exc)
+        _ci_error("Hiba", str(exc))
         return 1
     except RuntimeError as exc:
         # pl. Discord hiba / rate limit
         log.error("%s", exc)
+        _ci_error("Hiba", str(exc))
         return 1
     except KeyboardInterrupt:  # pragma: no cover
         return 130

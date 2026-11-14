@@ -113,6 +113,10 @@ Keyboard layout is reported in three states:
   sent; a significant price drop re-notifies.
 - **No server.** Scheduling, execution and persistence are all handled by GitHub
   Actions and the repository itself.
+- **Self-check.** `--self-check` validates the configuration, the Discord webhook
+  and access to Hardverapró in a few seconds. On GitHub Actions it emits
+  annotations, so a failing run explains itself on the summary page instead of
+  hiding the reason in the log.
 
 ## Configuration
 
@@ -258,6 +262,7 @@ Useful flags:
 | `--max-pages N` | Override pages per watch |
 | `--watch NAME` | Run a single watch |
 | `--cache` | Cache downloaded HTML in `.cache/` |
+| `--self-check` | Validate the config, the Discord webhook and access to Hardverapró without scanning |
 | `-v` | Debug logging |
 
 `--show-all` is the main tuning tool: it shows whether nearby candidates land at
