@@ -85,3 +85,20 @@ def test_enrich_merges_detail_into_listing():
     assert listing.condition == "használt"
     assert listing.shipping is True
     assert "RTX 5050" in listing.description
+
+
+def test_location_is_not_the_seller_rating():
+    """A részoldalon két uad-time-location blokk van; a helyszín a térkép-ikonos."""
+    html = """
+    <div class="uad-time-location">
+      <span><span class="uad-rating uad-rating-positive">18 pozitív</span> értékelés</span>
+      <span>2026-11-11 21:36</span>
+    </div>
+    <div class="uad-time-location">
+      <span><span class="fas fa-map-marker"></span> Százhalombatta</span>
+      <span><span class="fas fa-truck"></span> csomagküldéssel is</span>
+    </div>
+    """
+    detail = parse_detail_page(html)
+    assert detail["location"] == "Százhalombatta"
+    assert detail["shipping"] is True

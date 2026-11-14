@@ -18,6 +18,9 @@ def test_foreign_keyboard_detected():
     assert extract("US billentyűzet, lezerezés nélkül").keyboard == "foreign"
     assert extract("német billentyűzet").keyboard == "foreign"
     assert extract("kiosztás: DE").keyboard == "foreign"
+    assert extract("- Billentyűzet: Angol kiosztású").keyboard == "foreign"
+    assert extract("Billentyűzet: angol").keyboard == "foreign"
+    assert extract("francia kiosztás").keyboard == "foreign"
 
 
 def test_unknown_keyboard():

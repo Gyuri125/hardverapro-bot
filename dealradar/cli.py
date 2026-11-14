@@ -108,7 +108,16 @@ def prepare(
         for c in candidates
         if best_hit(c, config.profiles, config.market, {}) is not None or not c.specs.gpus
     ]
-    interesting.sort(key=lambda c: c.price or 0)
+    # A legígéretesebbeket dolgozzuk fel először: előbb a profilra illeszkedők,
+    # aztán amelyeknél a címből nem derült ki a GPU, végül a többi.
+    def scan_priority(candidate: Listing) -> tuple[int, int]:
+        if best_hit(candidate, config.profiles, config.market, {}) is not None:
+            return (0, candidate.price or 0)
+        if not candidate.specs.gpus:
+            return (1, candidate.price or 0)
+        return (2, candidate.price or 0)
+
+    interesting.sort(key=scan_priority)
     batch = interesting[: config.settings.deep_scan_limit]
 
     if batch:

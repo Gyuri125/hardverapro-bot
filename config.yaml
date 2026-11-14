@@ -37,7 +37,7 @@ settings:
   # Egyedi hirdetésoldalak letöltése a jelöltekhez (leírás + állapot
   # + billentyűzet + garancia). Ez adja a legpontosabb szűrést.
   deep_scan: true
-  deep_scan_limit: 40
+  deep_scan_limit: 60
 
 # ------------------------------------------------------------
 #  HOL keressünk
@@ -45,7 +45,7 @@ settings:
 watches:
   - name: "Notebook – minden"
     url: "https://hardverapro.hu/aprok/notebook/index.html"
-    max_pages: 3
+    max_pages: 4
     filters:
       min_price: 80000
       # A profilok úgyis 450 eFt-nál vágnak, ez csak biztonsági sáv.

@@ -162,13 +162,17 @@ def parse_detail_page(html: str) -> dict:
         text = "\n".join(paragraphs) or content_el.get_text("\n", strip=True)
         data["description"] = re.sub(r"\n{3,}", "\n\n", text).strip()
 
-    location_el = soup.select_one(".uad-time-location span")
-    if location_el:
-        location = location_el.get_text(" ", strip=True)
-        if location:
+    # A részoldalon két .uad-time-location blokk van: az első az eladó
+    # értékelése, a második a helyszín. A térkép-ikon alapján találjuk meg.
+    marker = soup.select_one(".uad-time-location .fa-map-marker")
+    if marker is not None and marker.parent is not None:
+        location = marker.parent.get_text(" ", strip=True)
+        if location and "pozit" not in location.lower() and "negat" not in location.lower():
             data["location"] = location
 
-    data["shipping"] = "csomagküldéssel" in soup.get_text(" ", strip=True).lower()
+    data["shipping"] = bool(soup.select_one(".fa-truck")) or "csomagküldéssel" in soup.get_text(
+        " ", strip=True
+    ).lower()
 
     return data
 

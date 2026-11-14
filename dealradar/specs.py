@@ -64,9 +64,11 @@ OLED_RE = re.compile(r"\boled\b", re.I)
 
 # "külföldi / német / US billentyűzet" – ezt ki kell szűrni, ha magyar kell
 FOREIGN_KB_RE = re.compile(
-    r"(kulfoldi billentyu|nem magyar billentyu|nemet billentyu|usz billentyu|"
-    r"us billentyu|uk billentyu|angol billentyu|nemet kiosztas|us kiosztas|"
-    r"uk kiosztas|kulfoldi kiosztas|kiosztas\s*:\s*(us|uk|de|nemet|angol|kulfoldi))"
+    r"(kulfoldi billentyu|nem magyar billentyu|nemet billentyu|us billentyu|"
+    r"uk billentyu|angol billentyu|"
+    r"\b(?:angol|nemet|francia|olasz|spanyol|orosz|ukran|uk|us|de)\s+kiosztas|"
+    r"billentyuzet\s*[:\-]\s*(?:angol|nemet|us|uk|francia|olasz|spanyol|orosz)\b|"
+    r"kiosztas\s*:\s*(?:us|uk|de|nemet|angol|kulfoldi))"
 )
 HU_KB_RE = re.compile(
     r"(magyar billentyu|magyar kiosztas|magyar bill\.|magyar keyboard|"
