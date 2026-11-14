@@ -51,7 +51,7 @@ def test_example_listing_is_detected_as_deal():
     listing = build_listing()
     hit = best_hit(listing, config.profiles, config.market, {})
     assert hit is not None
-    assert hit.profile.startswith("Sweet spot")
+    assert "5050" in hit.profile
     assert hit.score >= config.settings.min_score
 
 

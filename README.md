@@ -109,6 +109,8 @@ Keyboard layout is reported in three states:
   sit well below it.
 - **Benchmark enrichment.** PassMark CPU Mark for the processor and G3D Mark for
   the laptop GPU variant, with a graceful fallback when the source is unavailable.
+- **Hardware-aware filtering.** Screen size (four detection methods), keyboard
+  layout (HU / foreign / unknown), OLED, warranty and condition.
 - **Duplicate suppression.** A JSON state file records what has already been
   sent; a significant price drop re-notifies.
 - **No server.** Scheduling, execution and persistence are all handled by GitHub
@@ -166,6 +168,8 @@ Filter reference:
 | `include_keywords` | At least one must appear |
 | `exclude_keywords` | None may appear (title and description) |
 | `keyboard` | `hu` rejects explicitly foreign layouts; unknown values pass |
+| `min_screen_inch` | Minimum screen size in inches (0 = no limit) |
+| `screen_unknown` | `reject` drops ads where the size cannot be determined |
 | `exclude_promoted` | Skip paid "Előresorolva" placements |
 | `allow_business` | Whether shop sellers are allowed |
 | `min_seller_rating` | Minimum seller reputation |
@@ -199,9 +203,9 @@ default (`false`) treats unknown values as "not disqualifying".
 
 | Points | Source |
 | --- | --- |
-| 0-35 | Profile match (base) |
-| 0-40 | Price advantage versus the target price or market median; 25% below target is full marks |
-| 0-25 | Hardware: 32 GB RAM, 1 TB SSD, 165 Hz, GPU tier, OLED, warranty, Hungarian keyboard |
+| 0-40 | Profile match (base) |
+| 0-45 | Price advantage versus the target price or market median; 20% below target is full marks, and a price at the target still scores |
+| 0-20 | Hardware: 32 GB RAM, 1 TB SSD, 165 Hz, GPU tier, OLED, warranty, Hungarian keyboard |
 
 Anything at or above `min_score` is delivered. The score is a prioritisation
 heuristic, not an appraisal.

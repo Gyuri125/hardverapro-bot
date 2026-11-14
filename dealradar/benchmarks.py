@@ -65,6 +65,12 @@ def gpu_queries(gpu: str) -> list[str]:
     if up.startswith("ARC"):
         rest = up[4:] if up.startswith("ARC ") else up[3:]
         return [f"Arc {rest} Laptop GPU", f"Arc {rest}"]
+    if up.startswith("IRIS"):
+        return ["Intel Iris Xe Graphics"]
+    if up.startswith("UHD"):
+        return ["Intel UHD Graphics"]
+    if up.startswith("RADEON"):
+        return [f"Radeon {up[7:]}" if up.startswith("RADEON ") else up]
     if up.startswith("QUADRO") or up.startswith("RTX A"):
         return [f"NVIDIA {up} Laptop GPU", up]
     return [up]

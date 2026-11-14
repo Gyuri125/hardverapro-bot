@@ -63,6 +63,8 @@ class Specs:
             parts.append(
                 f"{self.storage_gb} GB SSD" if self.storage_gb < 1024 else f"{self.storage_gb // 1024} TB SSD"
             )
+        if self.screen_inch:
+            parts.append(f"{self.screen_inch:g}\"")
         if self.refresh_hz:
             parts.append(f"{self.refresh_hz} Hz")
         if self.oled:

@@ -69,6 +69,12 @@ watches:
       # átengedjük – a Discord üzenetben látod, hogy "nem derül ki".
       keyboard: hu
 
+      # KÉPERNYŐMÉRET: 15" alattit ne mutasson. A 15.6-16 a sweet spot.
+      # Ha a hirdetés nem írja a méretet, a "reject" kihagyja (biztonságos),
+      # az "allow" átengedi (több találat, de 14"-os is becsúszhat).
+      min_screen_inch: 15
+      screen_unknown: reject
+
       # Fizetett "Előresorolva" hirdetések kihagyása (általában boltok)
       exclude_promoted: true
       # Bolti (Bazár / üzleti) eladók engedélyezése
@@ -90,38 +96,64 @@ watches:
 #    - a `specs` megkötések teljesülnek (amit fel tudunk ismerni)
 #
 #  Pontszám (0-100):
-#    35  profil illeszkedés
-#    40  ár-előny a `deal_price`-hoz képest (vagy a piaci mediánhoz)
-#    25  felszereltség: RAM, SSD, GPU, Hz, OLED, gari, magyar bill.
+#    40  profil illeszkedés
+#    45  ár-előny a `deal_price`-hoz képest (vagy a piaci mediánhoz)
+#    20  felszereltség: RAM, SSD, GPU, Hz, OLED, gari, magyar bill.
 # ------------------------------------------------------------
 profiles:
-  # 1) A sweet spot: 4070 / 5050 / 5060 / 5070 alatt 450 eFt
-  - name: "Sweet spot – RTX 4070 / 5050 / 5060 / 5070, 450 alatt"
+  # 1) RTX 5060 / 5070 – a legjobb ár/érték a 450 eFt-os keretben
+  - name: "RTX 5060 / 5070 – 450 alatt"
     any_keywords: []
     all_keywords: []
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 150000
     max_price: 450000
-    deal_price: 390000
+    deal_price: 420000
     specs:
-      gpu_any: ["4070", "5050", "5060", "5070", "4080", "5080"]
+      gpu_any: ["5060", "5070"]
       min_ram_gb: 16
       min_storage_gb: 512
 
-  # 2) Közép-kategória jó áron
-  - name: "Közép gamer – RTX 4060 / 3070 / 5050, 360 alatt"
+  # 2) RTX 4070 / 4080 – előző generációs csúcs, ma is erős
+  - name: "RTX 4070 / 4080 – 450 alatt"
+    any_keywords: []
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 150000
+    max_price: 450000
+    deal_price: 400000
+    specs:
+      gpu_any: ["4070", "4080"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  # 3) RTX 5050 / 4060 – belépő gamer kategória
+  - name: "RTX 5050 / 4060 – 400 alatt"
     any_keywords: []
     all_keywords: []
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 120000
-    max_price: 360000
-    deal_price: 300000
+    max_price: 400000
+    deal_price: 340000
     specs:
-      gpu_any: ["4060", "3060", "3070", "5050"]
+      gpu_any: ["5050", "4060"]
       min_ram_gb: 16
       min_storage_gb: 512
 
-  # 3) OLED – bármilyen gép, akár nem gamer
+  # 4) RTX 3060 / 3070 – jó árú előző generáció
+  - name: "RTX 3060 / 3070 – 330 alatt"
+    any_keywords: []
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 100000
+    max_price: 330000
+    deal_price: 280000
+    specs:
+      gpu_any: ["3060", "3070"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  # 5) OLED – bármilyen gép, akár nem gamer
   - name: "OLED bármilyen gép – 450 alatt"
     any_keywords: []
     all_keywords: ["oled"]

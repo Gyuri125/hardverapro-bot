@@ -18,7 +18,7 @@ GPU_RE = re.compile(
 CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3})\b", re.I)
 CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3})\b")
-CPU_RYZEN_RE = re.compile(r"\bryzen\s+([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
+CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
 
 RAM_CTX_RE = re.compile(r"(\d{1,3})\s*GB\s*(?:DDR\d?|RAM)\b", re.I)
 RAM_LABEL_RE = re.compile(r"\bRAM\b[^0-9]{0,12}(\d{1,3})\s*GB", re.I)
@@ -29,7 +29,33 @@ TB_RE = re.compile(r"\b(\d{1,2})\s*TB\b", re.I)
 GB_TOKEN_RE = re.compile(r"\b(\d{1,4})\s*(GB|TB)\b", re.I)
 
 HZ_RE = re.compile(r"\b(\d{2,3})\s*Hz\b", re.I)
-SCREEN_RE = re.compile(r"(\d{1,2}(?:[.,]\d)?)\s*(?:\"|”|inch\b|hüvelyk\b|col\b)", re.I)
+
+# A hirdetésekben gyakori ® ™ © jelek széttörik a mintákat ("Core™ i5-1240P")
+_TRADEMARK_RE = re.compile(r"[®™©]")
+
+# Integrált grafikák
+IRIS_RE = re.compile(r"\biris\s*xe\b", re.I)
+UHD_RE = re.compile(r"\b(?:intel\s+)?uhd\s+graphics\b", re.I)
+RADEON_IGPU_RE = re.compile(r"\bradeon\s+(\d{3}m)\b", re.I)
+SCREEN_RE = re.compile(
+    r"(\d{1,2}(?:[.,]\d)?)\s*(?:\"|”|''|inch\b|hüvelyk\b|col\b|-os\b)", re.I
+)
+
+# Modellszámból kiolvasható méret: 15ACH6H, 16IRH8, 15ARH7 (Lenovo-jelölés).
+# A kódban kell lennie számjegynek, különben a "16GB" is méretnek látszana.
+MODEL_CODE_SIZE_RE = re.compile(r"\b(1[2-7])[A-Z]{2,}\d[A-Z]{0,2}\b", re.I)
+# ASUS/ROG jelölés: F15, G15, A15, K15
+MODEL_LETTER_SIZE_RE = re.compile(r"\b[AFGKM]\s?(1[2-7])\b", re.I)
+# Családnév + méret: "Zenbook 14", "IdeaPad 5 15", "MacBook Air 13"
+_FAMILIES = (
+    r"zenbook|vivobook|swift|aspire|ideapad|thinkbook|thinkpad|yoga|pavilion|victus|"
+    r"macbook air|macbook pro|legion|loq|katana|cyborg|modern|prestige|stealth|raider|"
+    r"zephyrus|strix|tuf|nitro|omen|envy|spectre|surface laptop|gram|expertbook|"
+    r"probook|elitebook|precision|latitude|vostro|inspiron|xps"
+)
+FAMILY_SIZE_RE = re.compile(
+    rf"\b(?:{_FAMILIES})\b(?:\s+(?:[a-z]{{1,8}}|\d{{1,2}})){{0,2}}\s+(1[2-7])\b", re.I
+)
 
 OLED_RE = re.compile(r"\boled\b", re.I)
 
@@ -64,6 +90,18 @@ def _find_gpus(text: str) -> list[str]:
         gpu = f"{brand.lower()} {number.lower()}"
         if gpu not in found:
             found.append(gpu)
+
+    # Integrált grafikák (Iris Xe, UHD, Radeon 780M)
+    if not found:
+        if IRIS_RE.search(text):
+            found.append("iris xe")
+        elif UHD_RE.search(text):
+            found.append("uhd graphics")
+        else:
+            match = RADEON_IGPU_RE.search(text)
+            if match:
+                found.append(f"radeon {match.group(1).lower()}")
+
     return found
 
 
@@ -137,6 +175,7 @@ def _find_storage(text: str, title: str) -> int | None:
 
 
 def _find_screen(text: str) -> float | None:
+    # 1) kifejezett hüvelyk: 15,6", 14 col, 16 hüvelyk, 14"-os
     for match in SCREEN_RE.finditer(text):
         raw = match.group(1).replace(",", ".")
         try:
@@ -145,6 +184,22 @@ def _find_screen(text: str) -> float | None:
             continue
         if 10.0 <= value <= 20.0:
             return value
+
+    # 2) Lenovo-szerű modellszám: 15ACH6H, 16IRH8
+    match = MODEL_CODE_SIZE_RE.search(text)
+    if match:
+        return float(match.group(1))
+
+    # 3) ASUS/ROG betű+szám: F15, G15, A15
+    match = MODEL_LETTER_SIZE_RE.search(text)
+    if match:
+        return float(match.group(1))
+
+    # 4) családnév + méret: "Zenbook 14", "IdeaPad 5 15", "MacBook Air 13"
+    match = FAMILY_SIZE_RE.search(text)
+    if match:
+        return float(match.group(1))
+
     return None
 
 
@@ -181,7 +236,8 @@ def _find_keyboard(text: str) -> str | None:
 
 def extract(text: str, title: str | None = None) -> Specs:
     """Specifikációk kinyerése a címből + leírásból."""
-    title = title if title is not None else text
+    text = _TRADEMARK_RE.sub("", text)
+    title = _TRADEMARK_RE.sub("", title if title is not None else text)
     return Specs(
         gpus=_find_gpus(text),
         cpu=_find_cpu(text),

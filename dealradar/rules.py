@@ -32,6 +32,14 @@ def passes_filters(listing: Listing, filters: WatchedFilters) -> bool:
     if filters.keyboard == "hu" and listing.specs.keyboard == "foreign":
         return False
 
+    if filters.min_screen_inch:
+        screen = listing.specs.screen_inch
+        if screen is None:
+            if filters.screen_unknown == "reject":
+                return False
+        elif screen < filters.min_screen_inch:
+            return False
+
     text = norm(listing.text)
     if filters.include_keywords and not any(norm(k) in text for k in filters.include_keywords):
         return False
@@ -205,17 +213,16 @@ def _spec_points(listing: Listing) -> tuple[int, list[str]]:
         points += 3
         reasons.append("magyar billentyűzet")
 
-    return min(points, 25), reasons
+    return min(points, 20), reasons
 
 
 def _price_points(price: int, target: int) -> tuple[int, float]:
-    """Mennyivel van az ár a célár alatt -> 0..40 pont."""
+    """0..45 pont. A célár körül is ad pontot, hogy ne legyen szakadék."""
     if target <= 0:
         return 0, 0.0
     ratio = (target - price) / target
-    if ratio <= 0:
-        return 0, ratio
-    return int(min(ratio / 0.25, 1.0) * 40), ratio
+    scaled = (ratio + 0.10) / 0.30
+    return int(min(max(scaled, 0.0), 1.0) * 45), ratio
 
 
 def score(
@@ -228,7 +235,7 @@ def score(
     if not matched or listing.price is None:
         return None
 
-    points = 35
+    points = 40
     spec_points, spec_reasons = _spec_points(listing)
     points += spec_points
     reasons.extend(spec_reasons)
@@ -250,8 +257,11 @@ def score(
                 f"ár {ratio * 100:.0f}%-kal a célár alatt "
                 f"({listing.price:,} Ft / {target:,} Ft)".replace(",", " "),
             )
-        elif median:
-            reasons.insert(0, f"ár a cél körül ({listing.price:,} Ft / {target:,} Ft)".replace(",", " "))
+        elif ratio > -0.10:
+            reasons.insert(
+                0,
+                f"ár a célár körül ({listing.price:,} Ft / {target:,} Ft)".replace(",", " "),
+            )
 
     if median and listing.price <= median * (1 - compare.good_deal_discount):
         reasons.append(f"piaci medián {median:,} Ft".replace(",", " "))

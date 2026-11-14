@@ -90,6 +90,10 @@ class WatchedFilters:
     locations: list[str] = field(default_factory=list)
     # "any" = mindegy; "hu" = a kifejezetten külföldi billentyűzetű gépeket kiszűri
     keyboard: str = "any"
+    # Minimum képernyőméret hüvelykben (0 = nincs megkötés)
+    min_screen_inch: float = 0.0
+    # Mi legyen, ha a méret nem derül ki: "allow" vagy "reject"
+    screen_unknown: str = "allow"
 
 
 @dataclass
@@ -220,6 +224,17 @@ def _as_keyboard(value: Any, where: str) -> str:
     raise ConfigError(f"{where}: 'any' vagy 'hu' lehet, ez nem az: {value!r}")
 
 
+def _as_screen_unknown(value: Any, where: str) -> str:
+    if value is None:
+        return "allow"
+    text = str(value).strip().lower()
+    if text in {"allow", "enged", "mindegy"}:
+        return "allow"
+    if text in {"reject", "elutasit", "elutasít", "kizar", "kizár"}:
+        return "reject"
+    raise ConfigError(f"{where}: 'allow' vagy 'reject' lehet, ez nem az: {value!r}")
+
+
 def _load_filters(raw: Any, where: str) -> WatchedFilters:
     if raw is None:
         return WatchedFilters()
@@ -238,6 +253,8 @@ def _load_filters(raw: Any, where: str) -> WatchedFilters:
         ),
         locations=_as_str_list(data.get("locations"), f"{where}.locations"),
         keyboard=_as_keyboard(data.get("keyboard"), f"{where}.keyboard"),
+        min_screen_inch=_as_float(data.get("min_screen_inch"), f"{where}.min_screen_inch", 0.0),
+        screen_unknown=_as_screen_unknown(data.get("screen_unknown"), f"{where}.screen_unknown"),
     )
 
 
