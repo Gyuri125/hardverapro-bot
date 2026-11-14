@@ -102,11 +102,52 @@ def test_colors_by_score():
 
 def test_dry_run_does_not_send(capsys):
     sent = send("https://pelda.invalid/webhook", [make_hit()], dry_run=True)
-    assert sent == 0
+    assert not sent
     output = capsys.readouterr().out
     assert "[DRY]" in output
     assert "hardverapro.hu" in output
 
 
 def test_empty_hits():
-    assert send("https://pelda.invalid/webhook", [], dry_run=False) == 0
+    assert not send("https://pelda.invalid/webhook", [], dry_run=False)
+
+
+def test_embeds_are_chunked_under_message_limit():
+    from dealradar.notify import MAX_MESSAGE_CHARS, _chunk_embeds, _embed_size
+
+    hits = []
+    for i in range(12):
+        hit = make_hit()
+        hit.listing.uadid = f"id-{i}"
+        hit.listing.title = "Lenovo Legion 5 15ACH6H RTX 4060 i7-14700HX 32GB 1TB " * 4
+        hits.append((hit, build_embed(hit)))
+
+    chunks = _chunk_embeds(hits)
+    assert len(chunks) >= 2
+    for chunk in chunks:
+        assert len(chunk) <= 10
+        assert sum(_embed_size(embed) for _, embed in chunk) <= MAX_MESSAGE_CHARS
+
+
+def test_failed_chunk_does_not_block_others(monkeypatch, tmp_path):
+    from dealradar import notify
+
+    hits = []
+    for i in range(8):
+        hit = make_hit()
+        hit.listing.uadid = f"id-{i}"
+        hit.listing.title = "Lenovo Legion 5 15ACH6H RTX 4060 i7-14700HX 32GB 1TB " * 4
+        hits.append(hit)
+
+    calls = {"n": 0}
+
+    def flaky_post(session, webhook, payload):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("Discord hiba 400: teszt")
+
+    monkeypatch.setattr(notify, "_post", flaky_post)
+    sent = notify.send("https://pelda.invalid/webhook", hits)
+
+    assert len(sent) < len(hits)
+    assert calls["n"] >= 2

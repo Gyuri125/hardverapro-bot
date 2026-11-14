@@ -392,16 +392,17 @@ def run(args: argparse.Namespace) -> int:
                 f"(Discord webhook URL). Dry-runhoz add meg a --dry-run kapcsolót."
             )
 
-    sent = 0
+    sent: set[str] = set()
     if new_hits:
         dry = args.dry_run or not webhook
         sent = send(webhook or "", new_hits, dry_run=dry)
         if not dry:
             for hit in new_hits:
-                state.mark(hit)
+                if hit.listing.uadid in sent:
+                    state.mark(hit)
 
     state.save()
-    log.info("Kész. Elküldve: %d, state mérete: %d", sent, len(state))
+    log.info("Kész. Elküldve: %d, state mérete: %d", len(sent), len(state))
     return 0
 
 

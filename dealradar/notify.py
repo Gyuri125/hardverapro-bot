@@ -16,6 +16,9 @@ from .models import Hit
 log = logging.getLogger(__name__)
 
 MAX_EMBEDS_PER_MESSAGE = 10
+# A Discord egy üzenetben összesen 6000 karaktert enged az embedekben.
+# Biztonsági ráhagyással 5200-nál vágunk, és új üzenetbe kezdünk.
+MAX_MESSAGE_CHARS = 5200
 
 COLOR_GREAT = 0x2ECC71  # zöld
 COLOR_GOOD = 0xF1C40F  # sárga
@@ -170,11 +173,42 @@ def send_test(webhook: str, *, dry_run: bool = False) -> int:
     return 1
 
 
-def send(webhook: str, hits: list[Hit], *, dry_run: bool = False) -> int:
-    """Elküldi a találatokat. Visszaadja az elküldött elemek számát."""
+def _embed_size(embed: dict) -> int:
+    """Hozzávetőleges karakterhossz, ahogy a Discord számolja."""
+    size = len(embed.get("title") or "") + len(embed.get("description") or "")
+    size += len(embed.get("footer", {}).get("text") or "")
+    for field in embed.get("fields", []):
+        size += len(field.get("name") or "") + len(field.get("value") or "")
+    return size
+
+
+def _chunk_embeds(items: list[tuple[Hit, dict]]) -> list[list[tuple[Hit, dict]]]:
+    """Darabolás a Discord 6000 karakteres üzenetlimije alatt."""
+    chunks: list[list[tuple[Hit, dict]]] = []
+    current: list[tuple[Hit, dict]] = []
+    current_size = 0
+
+    for hit, embed in items:
+        size = _embed_size(embed)
+        if current and (
+            len(current) >= MAX_EMBEDS_PER_MESSAGE or current_size + size > MAX_MESSAGE_CHARS
+        ):
+            chunks.append(current)
+            current = []
+            current_size = 0
+        current.append((hit, embed))
+        current_size += size
+
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def send(webhook: str, hits: list[Hit], *, dry_run: bool = False) -> set[str]:
+    """Elküldi a találatokat. Visszaadja az elküldött hirdetések azonosítóit."""
     if not hits:
         log.info("Nincs új találat, nem küldünk semmit.")
-        return 0
+        return set()
 
     if dry_run:
         for hit in hits:
@@ -183,26 +217,28 @@ def send(webhook: str, hits: list[Hit], *, dry_run: bool = False) -> int:
                 f"{hit.profile:<32}  {hit.listing.title[:70]}"
             )
             print(f"      {hit.listing.url_abs}")
-        return 0
+        return set()
 
     session = requests.Session()
-    sent = 0
-    chunks = [hits[i : i + MAX_EMBEDS_PER_MESSAGE] for i in range(0, len(hits), MAX_EMBEDS_PER_MESSAGE)]
+    sent: set[str] = set()
+    items = [(hit, build_embed(hit)) for hit in hits]
+    chunks = _chunk_embeds(items)
+    log.info("%d találat, %d Discord üzenetben", len(hits), len(chunks))
 
     for index, chunk in enumerate(chunks):
-        embeds = [build_embed(hit) for hit in chunk]
-        content = None
-        if index == 0:
-            content = f"**{len(hits)} új találat** a Hardveraprón" + (
-                f" – összesen {len(chunks)} üzenet" if len(chunks) > 1 else ""
-            )
+        embeds = [embed for _, embed in chunk]
         payload: dict = {"embeds": embeds}
-        if content:
-            payload["content"] = content
+        if index == 0:
+            payload["content"] = f"**{len(hits)} új találat** a Hardveraprón"
+        try:
+            _post(session, webhook, payload)
+        except RuntimeError as exc:
+            # Egy rossz üzenet ne vigye magával a többit.
+            log.error("Discord üzenet kihagyva: %s", exc)
+            continue
 
-        _post(session, webhook, payload)
-        sent += len(chunk)
-        log.info("Discord: %d/%d találat elküldve", sent, len(hits))
+        sent.update(hit.listing.uadid for hit, _ in chunk)
+        log.info("Discord: %d/%d találat elküldve", len(sent), len(hits))
         if index < len(chunks) - 1:
             time.sleep(1.0)
 
