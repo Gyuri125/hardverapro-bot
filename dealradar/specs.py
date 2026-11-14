@@ -16,6 +16,9 @@ GPU_RE = re.compile(
     re.I,
 )
 CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+# "Intel 7 240H" / "Ultra 7 240H" (a "Core" szó elhagyva)
+CPU_ULTRA_SHORT_RE = re.compile(r"\b(?:intel\s+|core\s+)?ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3})\b", re.I)
 CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3})\b")
 CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
@@ -70,6 +73,12 @@ HU_KB_RE = re.compile(
     r"hun billentyu|hu billentyu|magyarra lezerezve|magyarra lezerezett|"
     r"\bhungarian keyboard\b|\bhungarian layout\b|\bHUN\b)"
 )
+# Önmagában álló "MAGYAR" a hirdetés végén jellemzően magyar billentyűzetet jelent,
+# de a "magyar garancia", "magyarország", "magyar számla" nem az.
+HU_BARE_RE = re.compile(
+    r"\bmagyar\b(?!\s*(?:garancia|gari|orszag|szamla|nyelv|bolt|ceg|ugyfel|"
+    r"piac|termek|forgalmazo|honlap|oldal|webshop|kereskedo))"
+)
 
 STORAGE_VALUES = {120, 128, 240, 256, 320, 480, 500, 512, 640, 750, 1000, 1024, 2048, 4096}
 RAM_VALUES = {4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128}
@@ -106,7 +115,11 @@ def _find_gpus(text: str) -> list[str]:
 
 
 def _find_cpu(text: str) -> str | None:
-    match = CPU_ULTRA_RE.search(text)
+    match = (
+        CPU_ULTRA_RE.search(text)
+        or CPU_ULTRA_SHORT_RE.search(text)
+        or CPU_INTEL_NUM_RE.search(text)
+    )
     if match:
         return f"ultra {match.group(1)} {match.group(2).upper()}"
     match = CPU_INTEL_RE.search(text) or CPU_INTEL_BARE_RE.search(text)
@@ -227,7 +240,7 @@ def _is_new(text: str) -> bool:
 
 def _find_keyboard(text: str) -> str | None:
     n = norm(text)
-    if HU_KB_RE.search(n):
+    if HU_KB_RE.search(n) or HU_BARE_RE.search(n):
         return "hu"
     if FOREIGN_KB_RE.search(n):
         return "foreign"

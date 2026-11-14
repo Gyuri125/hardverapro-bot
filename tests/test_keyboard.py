@@ -24,6 +24,17 @@ def test_unknown_keyboard():
     assert extract("Lenovo Legion 5 RTX 4060 32GB").keyboard is None
 
 
+def test_bare_magyar_means_hungarian_keyboard():
+    assert extract("Lenovo Legion 5 - 15.6\" FHD 165Hz - Ryzen 5 5600H - MAGYAR").keyboard == "hu"
+    assert extract("ASUS ROG Strix G15, magyar").keyboard == "hu"
+
+
+def test_magyar_with_other_nouns_is_not_keyboard():
+    assert extract("Lenovo Legion 5, magyar garancia, számla").keyboard is None
+    assert extract("Magyarország legjobb árai").keyboard is None
+    assert extract("Magyar nyelvű Windows").keyboard is None
+
+
 def make_listing(text: str) -> Listing:
     listing = Listing(uadid="1", title=text, url="https://x", price=300_000)
     listing.specs = extract(text)

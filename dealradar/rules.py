@@ -15,8 +15,13 @@ from .specs import norm
 # --------------------------------------------------------------------------
 
 
-def passes_filters(listing: Listing, filters: WatchedFilters) -> bool:
-    """Kemény szűrők: ár, tiltott szavak, eladó, hely, hirdetés típusa."""
+def passes_filters(listing: Listing, filters: WatchedFilters, *, final: bool = False) -> bool:
+    """Kemény szűrők: ár, tiltott szavak, eladó, hely, hirdetés típusa.
+
+    `final=False`: a cím alapján döntünk, a leírás még nem ismert.
+    `final=True`:  a részoldal már beolvasva, ilyenkor az ismeretlen
+                   képernyőméret is kizárható.
+    """
     if listing.price is None:
         return False
     if listing.price < filters.min_price or listing.price > filters.max_price:
@@ -35,7 +40,7 @@ def passes_filters(listing: Listing, filters: WatchedFilters) -> bool:
     if filters.min_screen_inch:
         screen = listing.specs.screen_inch
         if screen is None:
-            if filters.screen_unknown == "reject":
+            if final and filters.screen_unknown == "reject":
                 return False
         elif screen < filters.min_screen_inch:
             return False

@@ -52,6 +52,12 @@ def test_integrated_gpu_detection():
     assert extract("Radeon 780M integrated").gpus == ["radeon 780m"]
 
 
+def test_intel_ultra_variants():
+    assert extract("Core Ultra 7 155H").cpu == "ultra 7 155H"
+    assert extract("Ultra 7 240H RTX 5050").cpu == "ultra 7 240H"
+    assert extract("Intel 7 240H RTX 5050 8GB").cpu == "ultra 7 240H"
+
+
 def make_listing(text: str) -> Listing:
     listing = Listing(uadid="1", title=text, url="https://x", price=300_000)
     listing.specs = extract(text)
@@ -70,8 +76,17 @@ def test_screen_filter_unknown_policy():
     allow = WatchedFilters(min_screen_inch=15.0, screen_unknown="allow")
     listing = make_listing("Lenovo Legion 5 RTX 4060 16GB")
     assert listing.specs.screen_inch is None
-    assert not passes_filters(listing, reject)
-    assert passes_filters(listing, allow)
+
+    # a cím alapján még nem zárjuk ki (a leírásban lehet a méret)
+    assert passes_filters(listing, reject)
+    # a részoldal beolvasása után viszont igen
+    assert not passes_filters(listing, reject, final=True)
+    assert passes_filters(listing, allow, final=True)
+
+
+def test_known_small_screen_is_rejected_even_before_deep_scan():
+    filters = WatchedFilters(min_screen_inch=15.0, screen_unknown="reject")
+    assert not passes_filters(make_listing('ASUS Zenbook 14" OLED'), filters)
 
 
 def test_screen_filter_disabled_by_default():

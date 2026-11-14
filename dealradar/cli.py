@@ -125,11 +125,12 @@ def prepare(
         listing.specs = extract(listing.text, listing.title)
         enriched[listing.uadid] = listing
 
-    # A deep scan után a leírásban talált tiltott szavak is számíthatnak.
+    # A deep scan után a leírásban talált tiltott szavak és a képernyőméret
+    # is számítanak (a címből sokszor nem derül ki).
     result: list[Listing] = []
     for listing in candidates:
         if listing.uadid in enriched:
-            if not any(passes_filters(listing, watch.filters) for watch in config.watches):
+            if not any(passes_filters(listing, watch.filters, final=True) for watch in config.watches):
                 log.debug("Kiszűrve a leírás alapján: %s", listing.title)
                 continue
         result.append(listing)

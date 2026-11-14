@@ -23,7 +23,7 @@ settings:
   # Túl kevés jön -> 40. Túl sok szemét -> 60.
   min_score: 50
   # Egy futásban max. ennyi értesítést küldünk (spam védelem).
-  max_notifications: 15
+  max_notifications: 25
 
   # Ezeket a hirdetéseket már láttuk -> ne küldjük újra.
   state_file: state/seen.json
@@ -160,7 +160,7 @@ profiles:
     none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
     min_price: 120000
     max_price: 450000
-    deal_price: 380000
+    deal_price: 340000
     specs:
       min_ram_gb: 16
 
