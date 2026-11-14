@@ -126,13 +126,13 @@ def prepare(
         enriched[listing.uadid] = listing
 
     # A deep scan után a leírásban talált tiltott szavak és a képernyőméret
-    # is számítanak (a címből sokszor nem derül ki).
+    # is számítanak. A szűrést minden jelöltre alkalmazzuk: ha a méret nem
+    # derült ki (mert nem került sorra a deep scanben), az is kiesik.
     result: list[Listing] = []
     for listing in candidates:
-        if listing.uadid in enriched:
-            if not any(passes_filters(listing, watch.filters, final=True) for watch in config.watches):
-                log.debug("Kiszűrve a leírás alapján: %s", listing.title)
-                continue
+        if not any(passes_filters(listing, watch.filters, final=True) for watch in config.watches):
+            log.debug("Kiszűrve a leírás/méret alapján: %s", listing.title)
+            continue
         result.append(listing)
     return result
 

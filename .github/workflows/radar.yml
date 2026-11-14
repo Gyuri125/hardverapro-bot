@@ -4,13 +4,13 @@ name: Hardverapró deal radar
 on:
   schedule:
     # GitHub a cron-t UTC-ben értelmezi. Budapest = UTC+1 (tél) / UTC+2 (nyár),
-    # ezért ez kb. 06:15, 12:15 és 18:15 helyi idő.
+    # ezért ez kb. 05:15, 10:15, 15:15 és 20:15 helyi idő.
     #
     # A masodik sor szandekos tartalek: a GitHub scheduler best-effort,
     # nagy terhelesnel kihagyhat egy idopontot. A deduplikacio miatt a
     # tartalek futas nem kuld duplikatumot, csak atveszi a kimaradt idosavot.
-    - cron: "15 5,11,17 * * *"
-    - cron: "45 5,11,17 * * *"
+    - cron: "15 4,9,14,19 * * *"
+    - cron: "45 4,9,14,19 * * *"
   workflow_dispatch:
     inputs:
       dry_run:

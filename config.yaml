@@ -23,7 +23,9 @@ settings:
   # Túl kevés jön -> 40. Túl sok szemét -> 60.
   min_score: 50
   # Egy futásban max. ennyi értesítést küldünk (spam védelem).
-  max_notifications: 25
+  # A rangsor pontszám szerint csökkenő, tehát a legjobbak mennek ki elsőként.
+  # 10 embed / üzenet, ezért ez 2-3 Discord üzenetet jelent.
+  max_notifications: 20
 
   # Ezeket a hirdetéseket már láttuk -> ne küldjük újra.
   state_file: state/seen.json
@@ -153,7 +155,20 @@ profiles:
       min_ram_gb: 16
       min_storage_gb: 512
 
-  # 5) OLED – bármilyen gép, akár nem gamer
+  # 5) RTX 4050 / 3050 – belépő gamer, jó ár alatt
+  - name: "RTX 4050 / 3050 – 300 alatt"
+    any_keywords: []
+    all_keywords: []
+    none_keywords: ["alkatrész", "hibás", "törött", "nem működik"]
+    min_price: 100000
+    max_price: 300000
+    deal_price: 250000
+    specs:
+      gpu_any: ["4050", "3050"]
+      min_ram_gb: 16
+      min_storage_gb: 512
+
+  # 6) OLED – bármilyen gép, akár nem gamer
   - name: "OLED bármilyen gép – 450 alatt"
     any_keywords: []
     all_keywords: ["oled"]

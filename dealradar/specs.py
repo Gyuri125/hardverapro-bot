@@ -47,8 +47,8 @@ SCREEN_RE = re.compile(
 # Modellszámból kiolvasható méret: 15ACH6H, 16IRH8, 15ARH7 (Lenovo-jelölés).
 # A kódban kell lennie számjegynek, különben a "16GB" is méretnek látszana.
 MODEL_CODE_SIZE_RE = re.compile(r"\b(1[2-7])[A-Z]{2,}\d[A-Z]{0,2}\b", re.I)
-# ASUS/ROG jelölés: F15, G15, A15, K15
-MODEL_LETTER_SIZE_RE = re.compile(r"\b[AFGKM]\s?(1[2-7])\b", re.I)
+# ASUS/ROG jelölés: F15, G15, A15, K15 (a betű és a szám egybe, vagy kötőjellel)
+MODEL_LETTER_SIZE_RE = re.compile(r"\b[AFGKM]-?(1[2-7])\b", re.I)
 # Családnév + méret: "Zenbook 14", "IdeaPad 5 15", "MacBook Air 13"
 _FAMILIES = (
     r"zenbook|vivobook|swift|aspire|ideapad|thinkbook|thinkpad|yoga|pavilion|victus|"

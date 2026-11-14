@@ -237,10 +237,10 @@ Actions, "Hardverapró deal radar", Run workflow:
 
 ### 4. Schedule
 
-`.github/workflows/radar.yml` runs at `15 5,11,17 * * *` UTC, which is roughly
-06:15, 12:15 and 18:15 in Budapest. A second schedule at `45` past the same hours
-acts as a fallback: GitHub's scheduler is best-effort and occasionally skips a
-slot, and the de-duplication state makes a redundant run harmless.
+`.github/workflows/radar.yml` runs at `15 4,9,14,19 * * *` UTC, which is roughly
+05:15, 10:15, 15:15 and 20:15 in Budapest. A second schedule at `45` past the same
+hours acts as a fallback: GitHub's scheduler is best-effort and occasionally skips
+a slot, and the de-duplication state makes a redundant run harmless.
 
 The run commits the updated `state/seen.json` back to the repository. If that
 step fails, enable Settings, Actions, General, Workflow permissions, "Read and

@@ -34,6 +34,10 @@ def test_family_name_size():
 def test_no_false_positive_on_model_numbers():
     # "Legion 5" nem 15 colos mérés, a "5" nem méret
     assert extract("Lenovo Legion 5 Pro").screen_inch is None
+    # "A 16 GB RAM" nem 16 colos kijelző
+    assert extract("stabil marad. A 16 GB RAM és a 256 GB SSD").screen_inch is None
+    # "16GB" nem méret
+    assert extract("Lenovo ThinkPad 16GB RAM 512GB SSD").screen_inch is None
 
 
 def test_trademark_symbols_do_not_break_cpu():
