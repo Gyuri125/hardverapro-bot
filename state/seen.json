@@ -136,6 +136,14 @@
    "score": 84,
    "title": "ASUS Zenbook 14 OLED (UM3402YA) - Ryzen 5 5625U - 16 GB - 512 GB SSD - 2.8K 90 Hz OLED - Win11 Pro"
   },
+  "7782235": {
+   "first_seen": "2026-11-15T12:19:33+00:00",
+   "notified_at": "2026-11-15T12:19:33+00:00",
+   "price": 249900,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 75,
+   "title": "MSI Thin A15 - 15,6\" FHD 144Hz - Ryzen 5 7535HS - RTX 4050 - 16GB - 512GB -Win11 - 2 év gari - HUN"
+  },
   "7782673": {
    "first_seen": "2026-11-15T12:03:29+00:00",
    "notified_at": "2026-11-15T12:03:29+00:00",
@@ -327,8 +335,16 @@
    "profile": "RTX 5050 / 4060 – 400 alatt",
    "score": 100,
    "title": "ASUS TUF A15 RTX 4060, 32gb DDR5, 1TB SSD"
+  },
+  "7800051": {
+   "first_seen": "2026-11-15T12:19:33+00:00",
+   "notified_at": "2026-11-15T12:19:33+00:00",
+   "price": 229990,
+   "profile": "RTX 3060 / 3070 – 330 alatt",
+   "score": 94,
+   "title": "Dell G15 5520 RTX3060 16GB DDR5"
   }
  },
- "updated_at": "2026-11-15T12:03:29+00:00",
+ "updated_at": "2026-11-15T12:19:33+00:00",
  "version": 1
 }
