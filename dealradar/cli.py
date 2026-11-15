@@ -264,16 +264,29 @@ def self_check(config: Config) -> int:
     )
     _ci_notice(f"Konfiguráció rendben: {len(config.watches)} figyelő, {len(config.profiles)} profil")
 
-    vision_state = "kikapcsolva"
-    if config.vision.enabled != "off":
-        if os.environ.get(config.vision.api_key_env):
-            vision_state = f"aktív ({config.vision.provider}, {config.vision.model})"
-        elif config.vision.enabled == "auto":
-            vision_state = "nincs API-kulcs, kihagyva"
+    client = build_client(config.vision)
+    if client is None:
+        if config.vision.enabled == "off":
+            vision_state = "kikapcsolva"
+        elif os.environ.get(config.vision.api_key_env):
+            vision_state = "bekapcsolva, de a kliens nem indul"
         else:
-            vision_state = "bekapcsolva, de nincs API-kulcs"
-    log.info("Billentyűzet-vision: %s", vision_state)
-    _ci_notice(f"Billentyűzet-vision: {vision_state}")
+            vision_state = "nincs API-kulcs, kihagyva"
+        log.info("Billentyűzet-vision: %s", vision_state)
+        _ci_notice(f"Billentyűzet-vision: {vision_state}")
+    else:
+        ok, message = client.check_model()
+        if ok:
+            log.info(
+                "Billentyűzet-vision: aktív (%s, %s)", config.vision.provider, config.vision.model
+            )
+            _ci_notice(f"Billentyűzet-vision: aktív ({config.vision.provider}, {message})")
+        else:
+            log.warning("Billentyűzet-vision modell hiba: %s", message)
+            _ci_error(
+                "Vision modell hiba",
+                f"{message}. Ellenőrizd a keyboard_vision.model és api_key_env beállítást.",
+            )
 
     # --- Discord webhook ---
     webhook = config.settings.webhook_url

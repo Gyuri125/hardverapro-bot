@@ -106,6 +106,37 @@ class VisionClient:
     def available(self) -> bool:
         return bool(self.api_key)
 
+    def check_model(self) -> tuple[bool, str]:
+        """Ellenőrzi, hogy a beállított modell elérhető-e ezzel a kulccsal."""
+        if not self.api_key:
+            return False, "nincs API-kulcs"
+
+        if self.config.provider == "gemini":
+            url = (
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{self.config.model}?key={self.api_key}"
+            )
+            headers: dict = {}
+        elif self.config.provider == "anthropic":
+            url = f"https://api.anthropic.com/v1/models/{self.config.model}"
+            headers = {"x-api-key": self.api_key, "anthropic-version": "2023-06-01"}
+        else:
+            url = f"{self.config.base_url.rstrip('/')}/models/{self.config.model}"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+
+        try:
+            response = self.session.get(url, headers=headers, timeout=20)
+        except requests.RequestException as exc:
+            return False, f"hálózati hiba: {exc}"
+
+        if response.status_code == 200:
+            return True, f"{self.config.model} elérhető"
+        if response.status_code in (401, 403):
+            return False, f"a kulcsot elutasította a szolgáltató (HTTP {response.status_code})"
+        if response.status_code == 404:
+            return False, f"a(z) {self.config.model} modell nem található (HTTP 404)"
+        return False, f"HTTP {response.status_code}: {response.text[:120]}"
+
     def analyze(self, image_urls: list[str]) -> VisionResult | None:
         urls = [u for u in image_urls if u][: self.config.max_images]
         if not urls or not self.api_key:

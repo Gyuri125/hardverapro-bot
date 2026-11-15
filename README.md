@@ -120,7 +120,7 @@ Provider presets:
 | --- | --- | --- | --- |
 | OpenAI | `openai` | `gpt-4o-mini` | `OPENAI_API_KEY` |
 | Anthropic | `anthropic` | `claude-3-5-haiku-latest` | `ANTHROPIC_API_KEY` |
-| Google AI Studio | `gemini` | `gemini-2.5-flash` | `GEMINI_API_KEY` |
+| Google AI Studio | `gemini` | `gemini-3.8-flash` | `GEMINI_API_KEY` |
 
 For Gemini, `api_key_env` must be `GEMINI_API_KEY`. The Gemini provider downloads
 the photos and sends them inline (base64), because its native API does not fetch

@@ -172,6 +172,66 @@ def test_build_client_off(monkeypatch):
 
 
 # --------------------------------------------------------------------------
+#  modell-ellenőrzés (self-check)
+# --------------------------------------------------------------------------
+
+
+class ModelSession:
+    def __init__(self, status_code: int):
+        self.status_code = status_code
+        self.calls = 0
+
+    def get(self, url, headers=None, timeout=None):
+        self.calls += 1
+
+        class Response:
+            pass
+
+        response = Response()
+        response.status_code = self.status_code
+        response.text = ""
+        return response
+
+
+def test_check_model_ok(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-test")
+    client = VisionClient(
+        VisionConfig(provider="gemini", api_key_env="GEMINI_API_KEY"), session=ModelSession(200)
+    )
+    ok, message = client.check_model()
+    assert ok is True
+    assert "elérhető" in message
+
+
+def test_check_model_not_found(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-test")
+    client = VisionClient(
+        VisionConfig(provider="gemini", api_key_env="GEMINI_API_KEY"), session=ModelSession(404)
+    )
+    ok, message = client.check_model()
+    assert ok is False
+    assert "nem található" in message
+
+
+def test_check_model_rejected_key(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-test")
+    client = VisionClient(
+        VisionConfig(provider="gemini", api_key_env="GEMINI_API_KEY"), session=ModelSession(403)
+    )
+    ok, message = client.check_model()
+    assert ok is False
+    assert "elutasította" in message
+
+
+def test_check_model_without_key(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    client = VisionClient(VisionConfig(provider="gemini", api_key_env="GEMINI_API_KEY"))
+    ok, message = client.check_model()
+    assert ok is False
+    assert "nincs API-kulcs" in message
+
+
+# --------------------------------------------------------------------------
 #  cache
 # --------------------------------------------------------------------------
 
