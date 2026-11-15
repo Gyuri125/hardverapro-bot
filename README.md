@@ -138,11 +138,22 @@ How it works:
    is dropped; `unclear` keeps the existing warning.
 
 Cost is controlled by `max_checks_per_run`: five checks per run, only for
-otherwise qualifying ads. With a small vision model that is a few cents per
-month.
+otherwise qualifying ads.
 
-Set the key as a repository secret (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`);
-the workflow already passes it through.
+**Free tier.** `gemini-3.8-flash` is available on the free tier: the official
+pricing table lists both input and output as "Free of charge" within the rate
+limits. Two conditions matter:
+
+- Do **not** enable billing on the Google Cloud project behind the API key,
+  otherwise paid rates apply.
+- On the free tier Google may use the submitted content to improve its products.
+  The images are public listing photos, but this is a deliberate trade-off.
+
+A Google AI Pro subscription is a consumer plan for the Gemini app; it does not
+provide API quota. The API key works independently of it.
+
+Set the key as a repository secret (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or
+`GEMINI_API_KEY`); the workflow already passes it through.
 
 ## Features
 
