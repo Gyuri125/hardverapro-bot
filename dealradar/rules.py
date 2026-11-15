@@ -45,6 +45,18 @@ def passes_filters(listing: Listing, filters: WatchedFilters, *, final: bool = F
         elif screen < filters.min_screen_inch:
             return False
 
+    if filters.min_cpu_year:
+        year = listing.specs.cpu_year
+        if year is None:
+            if final and filters.cpu_year_unknown == "reject":
+                return False
+        elif year < filters.min_cpu_year:
+            return False
+
+    if filters.min_memory_gen and listing.specs.memory_gen is not None:
+        if listing.specs.memory_gen < filters.min_memory_gen:
+            return False
+
     text = norm(listing.text)
     if filters.include_keywords and not any(norm(k) in text for k in filters.include_keywords):
         return False

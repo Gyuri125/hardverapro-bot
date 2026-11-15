@@ -67,6 +67,16 @@ def test_specs_link_present():
     assert value.startswith("[Megnézem](https://www.google.com/search?q=")
 
 
+def test_cpu_field_shows_comparison_to_reference():
+    hit = make_hit()
+    hit.cpu_bench = BenchResult("Intel Core i7-14700HX", 36314, "https://www.cpubenchmark.net/x", "cpu")
+    hit.cpu_delta_pct = 291.3
+    hit.reference_cpu = "i5-1135G7"
+    value = fields_of(build_embed(hit))["Processzor"]
+    assert "+291%" in value
+    assert "i5-1135G7" in value
+
+
 def test_embed_respects_discord_limits():
     embed = build_embed(make_hit())
     assert len(embed["title"]) <= 256

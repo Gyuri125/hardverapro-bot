@@ -234,6 +234,9 @@ Filter reference:
 | `keyboard` | `hu` rejects explicitly foreign layouts; unknown values pass |
 | `min_screen_inch` | Minimum screen size in inches (0 = no limit) |
 | `screen_unknown` | `reject` drops ads where the size cannot be determined |
+| `min_cpu_year` | Reject older platforms (2022 = 12th-gen Intel / Ryzen 6000) |
+| `cpu_year_unknown` | `reject` drops ads where the CPU age cannot be determined |
+| `min_memory_gen` | `5` rejects DDR4 machines (DDR5 only) |
 | `exclude_promoted` | Skip paid "Előresorolva" placements |
 | `allow_business` | Whether shop sellers are allowed |
 | `min_seller_rating` | Minimum seller reputation |
@@ -278,6 +281,27 @@ equivalent.
 
 Anything at or above `min_score` is delivered. The score is a prioritisation
 heuristic, not an appraisal.
+
+## Comparison with your own machine
+
+`comparison.reference_cpu` sets a baseline processor:
+
+```yaml
+comparison:
+  reference_cpu: "i5-1135G7"
+```
+
+The bot resolves its PassMark score once per run (the same lookup as for any
+advertised CPU) and adds the delta to the CPU field:
+
+```
+Processzor
+i7-14700HX
+CPU Mark: 36 314
++291% a te i5-1135G7-hez képest
+```
+
+The reference is display-only; it does not affect scoring.
 
 ## Deployment
 

@@ -23,6 +23,8 @@ class Specs:
     refresh_hz: int | None = None
     screen_inch: float | None = None
     oled: bool = False
+    memory_gen: int | None = None  # 4 = DDR4, 5 = DDR5
+    cpu_year: int | None = None  # a processzor platformjának éve (kb.)
     keyboard: str | None = None  # "hu" | "foreign" | None (ismeretlen)
     keyboard_source: str | None = None  # "text" | "photo"
     keyboard_note: str | None = None  # pl. "matricás", "fotó alapján"
@@ -67,6 +69,8 @@ class Specs:
             )
         if self.screen_inch:
             parts.append(f"{self.screen_inch:g}\"")
+        if self.memory_gen:
+            parts.append(f"DDR{self.memory_gen}")
         if self.refresh_hz:
             parts.append(f"{self.refresh_hz} Hz")
         if self.oled:
@@ -172,5 +176,8 @@ class Hit:
     market_median: int | None = None
     over_budget: bool = False
     budget: int | None = None
+    cpu_delta_pct: float | None = None
+    reference_cpu: str | None = None
+    reference_score: int | None = None
     cpu_bench: BenchResult | None = None
     gpu_bench: BenchResult | None = None

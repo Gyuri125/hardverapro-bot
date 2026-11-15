@@ -20,9 +20,10 @@ CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.
 # "Intel 7 240H" / "Ultra 7 240H" (a "Core" szó elhagyva)
 CPU_ULTRA_SHORT_RE = re.compile(r"\b(?:intel\s+|core\s+)?ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
-CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3})\b", re.I)
-CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3})\b")
+CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3}\d{0,2})\b", re.I)
+CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3}\d{0,2})\b")
 CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
+CPU_RYZEN_AI_RE = re.compile(r"\bryzen\s+ai\s+([3579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 
 RAM_CTX_RE = re.compile(r"(\d{1,3})\s*GB\s*(?:DDR\d?|RAM)\b", re.I)
 RAM_LABEL_RE = re.compile(r"\bRAM\b[^0-9]{0,12}(\d{1,3})\s*GB", re.I)
@@ -33,6 +34,13 @@ TB_RE = re.compile(r"\b(\d{1,2})\s*TB\b", re.I)
 GB_TOKEN_RE = re.compile(r"\b(\d{1,4})\s*(GB|TB)\b", re.I)
 
 HZ_RE = re.compile(r"\b(\d{2,3})\s*Hz\b", re.I)
+MEMORY_RE = re.compile(r"\b(?:lp)?ddr\s?([345])(?:x)?\b", re.I)
+# Rövidített írásmód: "16G D5", "32G D4"
+MEMORY_SHORT_RE = re.compile(r"\b\d{1,3}\s?g\s?d([45])\b", re.I)
+
+_INTEL_YEAR = {6: 2016, 7: 2017, 8: 2018, 9: 2019, 10: 2020, 11: 2021, 12: 2022, 13: 2023, 14: 2024}
+_AMD_SERIES_YEAR = {3000: 2020, 4000: 2020, 5000: 2021, 6000: 2022, 7000: 2023, 8000: 2024}
+_AMD_SHORT_YEAR = {4: 2020, 5: 2021, 7: 2023, 2: 2024, 3: 2025}
 
 # A hirdetésekben gyakori ® ™ © jelek széttörik a mintákat ("Core™ i5-1240P")
 _TRADEMARK_RE = re.compile(r"[®™©]")
@@ -133,6 +141,10 @@ def _find_cpu(text: str) -> str | None:
     )
     if match:
         return f"ultra {match.group(1)} {match.group(2).upper()}"
+
+    match = CPU_RYZEN_AI_RE.search(text)
+    if match:
+        return f"ryzen ai {match.group(1)} {match.group(2).upper()}"
     match = CPU_INTEL_RE.search(text) or CPU_INTEL_BARE_RE.search(text)
     if match:
         return f"{match.group(1).lower()}-{match.group(2).upper()}"
@@ -267,14 +279,63 @@ def _find_keyboard(text: str, title: str | None = None) -> KeyboardInfo:
     return KeyboardInfo()
 
 
+def _memory_gen(text: str) -> int | None:
+    gens = [int(value) for value in MEMORY_RE.findall(text)]
+    gens += [int(value) for value in MEMORY_SHORT_RE.findall(text)]
+    return max(gens) if gens else None
+
+
+def _cpu_year(cpu: str | None) -> int | None:
+    """A processzor platformjának hozzávetőleges éve (DDR5 korszak >= 2022)."""
+    if not cpu:
+        return None
+    n = norm(cpu)
+
+    if n.startswith("ultra"):
+        match = re.search(r"\b(\d{3})", n)
+        if match:
+            return {1: 2024, 2: 2025, 3: 2026}.get(int(match.group(1)[0]))
+        return None
+
+    if n.startswith(("i3", "i5", "i7", "i9")):
+        match = re.search(r"i[3579][-\s]?(\d{4,5}[a-z]{0,3}\d{0,2})", n)
+        if not match:
+            return None
+        lead = re.match(r"\d+", match.group(1))
+        if not lead:
+            return None
+        digits = lead.group(0)
+        if len(digits) >= 5 or digits.startswith("1"):
+            generation = int(digits[:2])
+        else:
+            generation = int(digits[0])
+        return _INTEL_YEAR.get(generation)
+
+    if n.startswith("ryzen"):
+        if "ai" in n:
+            return 2025
+        numbers = re.findall(r"\d{3,4}", n)
+        if not numbers:
+            return None
+        number = int(numbers[0])
+        if number >= 1000:
+            return _AMD_SERIES_YEAR.get((number // 1000) * 1000)
+        return _AMD_SHORT_YEAR.get(int(str(number)[0]))
+
+    return None
+
+
 def extract(text: str, title: str | None = None) -> Specs:
     """Specifikációk kinyerése a címből + leírásból."""
     text = _TRADEMARK_RE.sub("", text)
     title = _TRADEMARK_RE.sub("", title if title is not None else text)
     keyboard = _find_keyboard(text, title)
+    cpu = _find_cpu(text)
     return Specs(
         gpus=_find_gpus(text),
-        cpu=_find_cpu(text),
+        cpu=cpu,
+        cpu_year=_cpu_year(cpu),
+        memory_gen=_memory_gen(text),
         ram_gb=_find_ram(text, title),
         storage_gb=_find_storage(text, title),
         refresh_hz=_find_refresh(text),

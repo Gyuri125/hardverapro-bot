@@ -65,6 +65,12 @@ def _cpu_field(hit: Hit) -> str:
     if hit.cpu_bench:
         score = _markdown_number(hit.cpu_bench.score)
         value += f"\nCPU Mark: **[{score}]({hit.cpu_bench.url})**"
+    if hit.cpu_delta_pct is not None and hit.reference_cpu:
+        sign = "+" if hit.cpu_delta_pct >= 0 else ""
+        value += (
+            f"\n**{sign}{hit.cpu_delta_pct:.0f}%** a te "
+            f"{_label(hit.reference_cpu)}-hez képest"
+        )
     return value
 
 

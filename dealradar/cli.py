@@ -236,7 +236,7 @@ def refine_keyboards(config: Config, hits: list[Hit]) -> tuple[list[Hit], list[H
     return kept, excluded
 
 
-def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> None:
+def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> Benchmarks:
     """PassMark CPU Mark / G3D Mark pontszámok a találatokhoz (best effort)."""
     bench = Benchmarks(fetcher)
     for hit in hits:
@@ -249,6 +249,28 @@ def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> None:
             hit.cpu_bench.score if hit.cpu_bench else "nincs",
             hit.gpu_bench.score if hit.gpu_bench else "nincs",
         )
+    return bench
+
+
+def attach_comparison(config: Config, bench: Benchmarks, hits: list[Hit]) -> None:
+    """A hirdetett CPU összevetése a felhasználó referenciagépével."""
+    reference = config.comparison.reference_cpu
+    if not reference:
+        return
+
+    ref = bench.cpu(reference)
+    if ref is None or not ref.score:
+        log.warning("Az összehasonlítás alap-CPU nem található: %s", reference)
+        return
+
+    for hit in hits:
+        if hit.cpu_bench is None or not hit.cpu_bench.score:
+            continue
+        hit.cpu_delta_pct = (hit.cpu_bench.score - ref.score) / ref.score * 100.0
+        hit.reference_cpu = reference
+        hit.reference_score = ref.score
+
+    log.info("Összehasonlítás: %s (%d CPU Mark)", reference, ref.score)
 
 
 def self_check(config: Config) -> int:
@@ -493,7 +515,8 @@ def run(args: argparse.Namespace) -> int:
 
     new_hits = new_hits[: config.settings.max_notifications]
     if new_hits:
-        attach_benchmarks(fetcher, new_hits)
+        bench = attach_benchmarks(fetcher, new_hits)
+        attach_comparison(config, bench, new_hits)
 
     if excluded:
         excluded_ids = {id(hit) for hit in excluded}

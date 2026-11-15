@@ -94,6 +94,12 @@ class WatchedFilters:
     min_screen_inch: float = 0.0
     # Mi legyen, ha a méret nem derül ki: "allow" vagy "reject"
     screen_unknown: str = "allow"
+    # Platformkor: ennél régebbi CPU-t (pl. Intel 11. gen = 2021) kiszűri
+    min_cpu_year: int = 0
+    # Mi legyen, ha a CPU kora nem derül ki: "allow" vagy "reject"
+    cpu_year_unknown: str = "allow"
+    # Minimum memóriageneráció: 5 = DDR5 (a DDR4-et kiszűri)
+    min_memory_gen: int = 0
 
 
 @dataclass
@@ -150,6 +156,13 @@ class MarketCompare:
 
 
 @dataclass
+class ComparisonConfig:
+    """A hirdetett CPU összehasonlítása egy referencia processzorral."""
+
+    reference_cpu: str | None = None
+
+
+@dataclass
 class VisionConfig:
     """Fotó alapú billentyűzet-felismerés beállításai."""
 
@@ -171,6 +184,7 @@ class Config:
     profiles: list[Profile] = field(default_factory=list)
     market: MarketCompare = field(default_factory=MarketCompare)
     vision: VisionConfig = field(default_factory=VisionConfig)
+    comparison: ComparisonConfig = field(default_factory=ComparisonConfig)
 
     def profile_names(self) -> list[str]:
         return [p.name for p in self.profiles]
@@ -253,7 +267,6 @@ def _as_screen_unknown(value: Any, where: str) -> str:
         return "reject"
     raise ConfigError(f"{where}: 'allow' vagy 'reject' lehet, ez nem az: {value!r}")
 
-
 def _load_filters(raw: Any, where: str) -> WatchedFilters:
     if raw is None:
         return WatchedFilters()
@@ -274,6 +287,11 @@ def _load_filters(raw: Any, where: str) -> WatchedFilters:
         keyboard=_as_keyboard(data.get("keyboard"), f"{where}.keyboard"),
         min_screen_inch=_as_float(data.get("min_screen_inch"), f"{where}.min_screen_inch", 0.0),
         screen_unknown=_as_screen_unknown(data.get("screen_unknown"), f"{where}.screen_unknown"),
+        min_cpu_year=_as_int(data.get("min_cpu_year"), f"{where}.min_cpu_year", 0),
+        cpu_year_unknown=_as_screen_unknown(
+            data.get("cpu_year_unknown"), f"{where}.cpu_year_unknown"
+        ),
+        min_memory_gen=_as_int(data.get("min_memory_gen"), f"{where}.min_memory_gen", 0),
     )
 
 
@@ -425,4 +443,17 @@ def load_config(path: str | Path) -> Config:
     if vision.max_images < 1:
         raise ConfigError("keyboard_vision.max_images: legalább 1 kell")
 
-    return Config(settings=settings, watches=watches, profiles=profiles, market=market, vision=vision)
+    comp = _require_mapping(data.get("comparison") or {}, "comparison")
+    reference = comp.get("reference_cpu")
+    comparison = ComparisonConfig(
+        reference_cpu=str(reference).strip() if reference else None
+    )
+
+    return Config(
+        settings=settings,
+        watches=watches,
+        profiles=profiles,
+        market=market,
+        vision=vision,
+        comparison=comparison,
+    )
