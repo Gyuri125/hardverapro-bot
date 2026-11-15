@@ -359,8 +359,24 @@
    "profile": "RTX 3060 / 3070 – 330 alatt",
    "score": 94,
    "title": "Dell G15 5520 RTX3060 16GB DDR5"
+  },
+  "7800688": {
+   "first_seen": "2026-11-15T19:51:48+00:00",
+   "notified_at": "2026-11-15T19:51:48+00:00",
+   "price": 260000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 64,
+   "title": "ASUS TUF Gaming A15 gamer laptop (Ryzen 5, RTX 4050, 16GB, 1TB WD SSD) Újszerű, dobozos, még 8 hón"
+  },
+  "7800729": {
+   "first_seen": "2026-11-15T19:51:48+00:00",
+   "notified_at": "2026-11-15T19:51:48+00:00",
+   "price": 279990,
+   "profile": "RTX 3060 / 3070 – 330 alatt",
+   "score": 69,
+   "title": "Lenovo Legion 5 i7 12700H - 14mag 20 szálon!/ RTX3060/ 16GB DDR5/ 512 SSD/ 165Hz - 15.6\" kijelző"
   }
  },
- "updated_at": "2026-11-15T13:22:11+00:00",
+ "updated_at": "2026-11-15T19:51:48+00:00",
  "version": 1
 }
