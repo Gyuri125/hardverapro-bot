@@ -232,9 +232,9 @@ market_compare:
 # ------------------------------------------------------------
 keyboard_vision:
   enabled: auto
-  provider: openai          # openai | anthropic | gemini
-  model: gpt-4o-mini
-  api_key_env: OPENAI_API_KEY
+  provider: gemini          # openai | anthropic | gemini
+  model: gemini-2.5-flash
+  api_key_env: GEMINI_API_KEY
   base_url: https://api.openai.com/v1
   max_checks_per_run: 5
   max_images: 3
