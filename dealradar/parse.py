@@ -174,6 +174,22 @@ def parse_detail_page(html: str) -> dict:
         " ", strip=True
     ).lower()
 
+    images: list[str] = []
+    for anchor in soup.select(".carousel-item a[href]"):
+        href = (anchor.get("href") or "").strip()
+        if href.startswith("//"):
+            href = "https:" + href
+        if href.startswith("http") and href not in images:
+            images.append(href)
+    if not images:
+        for img in soup.select(".carousel-inner img[src]"):
+            src = (img.get("src") or "").strip()
+            if src.startswith("//"):
+                src = "https:" + src
+            if src.startswith("http") and src not in images:
+                images.append(src)
+    data["images"] = images
+
     return data
 
 
@@ -186,4 +202,7 @@ def enrich(listing: Listing, detail: dict) -> Listing:
     listing.description = detail.get("description") or listing.description
     listing.location = detail.get("location") or listing.location
     listing.shipping = bool(detail.get("shipping")) or listing.shipping
+    images = detail.get("images") or []
+    if images:
+        listing.images = list(images)
     return listing

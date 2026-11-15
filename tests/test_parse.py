@@ -102,3 +102,29 @@ def test_location_is_not_the_seller_rating():
     detail = parse_detail_page(html)
     assert detail["location"] == "Százhalombatta"
     assert detail["shipping"] is True
+
+
+def test_detail_images_are_extracted():
+    html = """
+    <div class="carousel-item">
+      <a href="//cdn.rios.hu/dl/uad/1/a.jpg"><img src="//cdn.rios.hu/dl/uad/1/a.jpg/100"></a>
+    </div>
+    <div class="carousel-item">
+      <a href="https://cdn.rios.hu/dl/uad/1/b.jpg">kép</a>
+    </div>
+    <div class="carousel-item">
+      <a href="//cdn.rios.hu/dl/uad/1/a.jpg">duplikált</a>
+    </div>
+    """
+    images = parse_detail_page(html)["images"]
+    assert images == [
+        "https://cdn.rios.hu/dl/uad/1/a.jpg",
+        "https://cdn.rios.hu/dl/uad/1/b.jpg",
+    ]
+
+
+def test_enrich_copies_images():
+    html = (FIXTURES / "list_page.html").read_text(encoding="utf-8")
+    listing = parse_list_page(html)[0]
+    enrich(listing, {"images": ["https://cdn.rios.hu/x.jpg"]})
+    assert listing.images == ["https://cdn.rios.hu/x.jpg"]

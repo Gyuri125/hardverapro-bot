@@ -78,11 +78,19 @@ def _gpu_field(hit: Hit) -> str:
 
 
 def _keyboard_field(hit: Hit) -> str:
-    keyboard = hit.listing.specs.keyboard
-    if keyboard == "hu":
+    specs = hit.listing.specs
+    if specs.keyboard == "hu":
+        if specs.keyboard_source == "photo":
+            return "magyar (fotó alapján)"
+        if specs.keyboard_note == "matricás":
+            return "magyar matrica (nem gyári)"
         return "magyar (a hirdetés szerint)"
-    if keyboard == "foreign":
+    if specs.keyboard == "foreign":
+        if specs.keyboard_source == "photo":
+            return "külföldi (fotó alapján)"
         return "külföldi"
+    if specs.keyboard_note:
+        return f"**nem derül ki**\n{specs.keyboard_note} – kérdezz rá az eladónál"
     return "**nem derül ki**\nkérdezz rá az eladónál"
 
 

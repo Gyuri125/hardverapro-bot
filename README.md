@@ -87,13 +87,50 @@ Miért jó: ár 10%-kal a célár alatt · 32 GB RAM · 165 Hz
 [4] Model specification search
 ```
 
-Keyboard layout is reported in three states:
+Keyboard layout is reported in five states:
 
 | Value | Meaning |
 | --- | --- |
-| `magyar` | The ad states a Hungarian keyboard |
-| `nem derül ki` | Not mentioned; the buyer has to ask |
+| `magyar (a hirdetés szerint)` | The ad states a Hungarian keyboard |
+| `magyar matrica (nem gyári)` | An applied Hungarian sticker overlay |
+| `magyar (fotó alapján)` | A vision model recognised Hungarian keycaps |
+| `nem derül ki` | Not mentioned and not visible; the buyer has to ask |
 | `külföldi` | Explicitly foreign; filtered out before scoring |
+
+## Keyboard layout from photos
+
+Optional, off by default. It activates on its own (`enabled: auto`) when an API
+key is available.
+
+```yaml
+keyboard_vision:
+  enabled: auto            # auto | on | off
+  provider: openai         # openai | anthropic
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+  max_checks_per_run: 5
+  max_images: 3
+  min_confidence: 0.6
+  exclude_foreign: true
+```
+
+How it works:
+
+1. Only ads that already passed every other filter are considered.
+2. Only ads whose keyboard layout is still unknown, and that have photos.
+3. Up to `max_images` photos are sent in one request with a strict prompt
+   (look for `í`, `ő`, `ű`; answer `hu` / `foreign` / `unclear`).
+4. The answer is cached in `state/vision_cache.json` by image hash, so the same
+   photos are never analysed twice.
+5. `hu` adds the label and a small score bonus; `foreign` above `min_confidence`
+   is dropped; `unclear` keeps the existing warning.
+
+Cost is controlled by `max_checks_per_run`: five checks per run, only for
+otherwise qualifying ads. With a small vision model that is a few cents per
+month.
+
+Set the key as a repository secret (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`);
+the workflow already passes it through.
 
 ## Features
 
@@ -111,6 +148,10 @@ Keyboard layout is reported in three states:
   the laptop GPU variant, with a graceful fallback when the source is unavailable.
 - **Hardware-aware filtering.** Screen size (four detection methods), keyboard
   layout (HU / foreign / unknown), OLED, warranty and condition.
+- **Keyboard layout from photos.** When the ad text does not state the layout, the
+  bot can send the listing photos to a vision model and look for Hungarian
+  keycap legends (`á é í ó ö ő ú ü ű`, especially `í`). Off by default; it
+  activates automatically when an API key is present.
 - **Duplicate suppression.** A JSON state file records what has already been
   sent; a significant price drop re-notifies.
 - **No server.** Scheduling, execution and persistence are all handled by GitHub
@@ -296,6 +337,9 @@ breaks the bot. No network access is required.
 - **PassMark.** One request per distinct CPU or GPU among the notified ads,
   normally a handful per run. If the site is unavailable, scores are omitted and
   the notification still goes out.
+- **Vision (optional).** Public listing photo URLs are sent to the configured
+  provider (OpenAI or Anthropic) only for otherwise qualifying ads whose keyboard
+  layout is unknown. Results are cached; nothing else leaves the machine.
 - **Specification link.** A Google search for the model, because manufacturer
   URLs differ per brand and per generation.
 

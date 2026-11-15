@@ -208,3 +208,28 @@ market_compare:
   group_by: gpu            # gpu | cpu | brand
   min_samples: 10          # ennyi hirdetés alatt nem számol mediánt
   good_deal_discount: 0.20 # 20% medián alatt = jó deal
+
+# ------------------------------------------------------------
+#  BILLENTYŰZET FELISMERÉSE FOTÓBÓL (opcionális)
+#
+#  Ha a szövegből nem derül ki a kiosztás, a hirdetés fotóit
+#  elküldi egy vision modellnek. Csak a legjobb jelöltekre fut,
+#  futásonként max. 5-re, és az eredményt cache-eli.
+#
+#  enabled: auto  -> csak akkor fut, ha van API-kulcs
+#           on    -> kötelező (figyelmeztet, ha nincs kulcs)
+#           off   -> kikapcsolva
+#
+#  A kulcsot GitHub Secretként add hozzá:
+#    OPENAI_API_KEY  vagy  ANTHROPIC_API_KEY
+# ------------------------------------------------------------
+keyboard_vision:
+  enabled: auto
+  provider: openai          # openai | anthropic
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+  base_url: https://api.openai.com/v1
+  max_checks_per_run: 5
+  max_images: 3
+  min_confidence: 0.6
+  exclude_foreign: true

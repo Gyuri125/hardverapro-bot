@@ -19,6 +19,7 @@ from .parse import enrich, page_url, parse_detail_page, parse_list_page
 from .rules import best_hit, compute_market_medians, passes_filters
 from .specs import extract
 from .state import SeenState
+from .vision import VisionCache, build_client, image_key
 
 log = logging.getLogger("dealradar")
 
@@ -166,6 +167,75 @@ def evaluate(config: Config, listings: list[Listing]) -> list[Hit]:
 # --------------------------------------------------------------------------
 
 
+def refine_keyboards(config: Config, hits: list[Hit]) -> tuple[list[Hit], list[Hit]]:
+    """Fotó alapján pontosítja a billentyűzet-kiosztást.
+
+    Csak azokra a találatokra fut, ahol a szövegből nem derült ki a kiosztás,
+    és csak akkor, ha van beállított API-kulcs. Visszaadja a megtartott és a
+    fotó alapján kizárt találatokat.
+    """
+    client = build_client(config.vision)
+    if client is None:
+        return hits, []
+
+    cache = VisionCache(Path(config.settings.state_file).parent / "vision_cache.json")
+    cache.load()
+    cache.prune()
+
+    kept: list[Hit] = []
+    excluded: list[Hit] = []
+    checks = 0
+
+    for hit in hits:
+        specs = hit.listing.specs
+        if specs.keyboard is not None or not hit.listing.images:
+            kept.append(hit)
+            continue
+        if checks >= config.vision.max_checks_per_run:
+            kept.append(hit)
+            continue
+
+        key = image_key(hit.listing.images)
+        result = cache.get(key)
+        if result is None:
+            result = client.analyze(hit.listing.images[: config.vision.max_images])
+            checks += 1
+            if result is not None:
+                cache.put(key, result)
+
+        if result is None:
+            kept.append(hit)
+            continue
+
+        if result.layout == "hu" and result.confidence >= config.vision.min_confidence:
+            specs.keyboard = "hu"
+            specs.keyboard_source = "photo"
+            specs.keyboard_note = "fotó alapján"
+            hit.reasons.append("magyar billentyűzet (fotó alapján)")
+            log.info("Fotó alapján magyar billentyűzet: %s", hit.listing.title[:60])
+            kept.append(hit)
+        elif (
+            result.layout == "foreign"
+            and result.confidence >= config.vision.min_confidence
+            and config.vision.exclude_foreign
+        ):
+            specs.keyboard = "foreign"
+            specs.keyboard_source = "photo"
+            specs.keyboard_note = result.evidence[:120]
+            log.info(
+                "Fotó alapján külföldi billentyűzet, kihagyva: %s (%s)",
+                hit.listing.title[:60],
+                result.evidence[:80],
+            )
+            excluded.append(hit)
+        else:
+            specs.keyboard_note = "fotó alapján nem derült ki"
+            kept.append(hit)
+
+    cache.save()
+    return kept, excluded
+
+
 def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> None:
     """PassMark CPU Mark / G3D Mark pontszámok a találatokhoz (best effort)."""
     bench = Benchmarks(fetcher)
@@ -193,6 +263,17 @@ def self_check(config: Config) -> int:
         config.settings.min_score,
     )
     _ci_notice(f"Konfiguráció rendben: {len(config.watches)} figyelő, {len(config.profiles)} profil")
+
+    vision_state = "kikapcsolva"
+    if config.vision.enabled != "off":
+        if os.environ.get(config.vision.api_key_env):
+            vision_state = f"aktív ({config.vision.provider}, {config.vision.model})"
+        elif config.vision.enabled == "auto":
+            vision_state = "nincs API-kulcs, kihagyva"
+        else:
+            vision_state = "bekapcsolva, de nincs API-kulcs"
+    log.info("Billentyűzet-vision: %s", vision_state)
+    _ci_notice(f"Billentyűzet-vision: {vision_state}")
 
     # --- Discord webhook ---
     webhook = config.settings.webhook_url
@@ -389,10 +470,21 @@ def run(args: argparse.Namespace) -> int:
     if skipped:
         log.info("%d találat már ismert, kihagyva", skipped)
 
-    new_hits = new_hits[: config.settings.max_notifications]
+    excluded: list[Hit] = []
+    if new_hits:
+        new_hits, excluded = refine_keyboards(config, new_hits)
+        dry = args.dry_run or not webhook
+        if excluded and not dry:
+            for hit in excluded:
+                state.mark(hit)
 
+    new_hits = new_hits[: config.settings.max_notifications]
     if new_hits:
         attach_benchmarks(fetcher, new_hits)
+
+    if excluded:
+        excluded_ids = {id(hit) for hit in excluded}
+        hits = [hit for hit in hits if id(hit) not in excluded_ids]
 
     print_table(hits if args.show_all else new_hits)
 

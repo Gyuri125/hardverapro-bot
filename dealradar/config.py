@@ -150,11 +150,27 @@ class MarketCompare:
 
 
 @dataclass
+class VisionConfig:
+    """Fotó alapú billentyűzet-felismerés beállításai."""
+
+    enabled: str = "auto"  # auto | on | off  (auto: csak ha van API-kulcs)
+    provider: str = "openai"  # openai | anthropic
+    model: str = "gpt-4o-mini"
+    api_key_env: str = "OPENAI_API_KEY"
+    base_url: str = "https://api.openai.com/v1"
+    max_checks_per_run: int = 5
+    max_images: int = 3
+    min_confidence: float = 0.6
+    exclude_foreign: bool = True
+
+
+@dataclass
 class Config:
     settings: Settings = field(default_factory=Settings)
     watches: list[Watch] = field(default_factory=list)
     profiles: list[Profile] = field(default_factory=list)
     market: MarketCompare = field(default_factory=MarketCompare)
+    vision: VisionConfig = field(default_factory=VisionConfig)
 
     def profile_names(self) -> list[str]:
         return [p.name for p in self.profiles]
@@ -380,4 +396,33 @@ def load_config(path: str | Path) -> Config:
     if market.group_by not in {"gpu", "cpu", "brand"}:
         raise ConfigError("market_compare.group_by: gpu / cpu / brand lehet")
 
-    return Config(settings=settings, watches=watches, profiles=profiles, market=market)
+    v = _require_mapping(data.get("keyboard_vision") or {}, "keyboard_vision")
+    enabled = str(v.get("enabled", "auto")).strip().lower()
+    if enabled in {"true", "1", "yes", "igen"}:
+        enabled = "on"
+    elif enabled in {"false", "0", "no", "nem"}:
+        enabled = "off"
+    if enabled not in {"auto", "on", "off"}:
+        raise ConfigError("keyboard_vision.enabled: auto / on / off lehet")
+    provider = str(v.get("provider") or "openai").strip().lower()
+    if provider not in {"openai", "anthropic"}:
+        raise ConfigError("keyboard_vision.provider: openai vagy anthropic lehet")
+    vision = VisionConfig(
+        enabled=enabled,
+        provider=provider,
+        model=str(v.get("model") or "gpt-4o-mini"),
+        api_key_env=str(v.get("api_key_env") or "OPENAI_API_KEY"),
+        base_url=str(v.get("base_url") or "https://api.openai.com/v1"),
+        max_checks_per_run=_as_int(
+            v.get("max_checks_per_run"), "keyboard_vision.max_checks_per_run", 5
+        ),
+        max_images=_as_int(v.get("max_images"), "keyboard_vision.max_images", 3),
+        min_confidence=_as_float(v.get("min_confidence"), "keyboard_vision.min_confidence", 0.6),
+        exclude_foreign=_as_bool(
+            v.get("exclude_foreign"), "keyboard_vision.exclude_foreign", True
+        ),
+    )
+    if vision.max_images < 1:
+        raise ConfigError("keyboard_vision.max_images: legalább 1 kell")
+
+    return Config(settings=settings, watches=watches, profiles=profiles, market=market, vision=vision)

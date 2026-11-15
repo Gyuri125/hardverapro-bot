@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from dataclasses import dataclass
 
 from .models import Specs
 
@@ -78,6 +79,17 @@ HU_KB_RE = re.compile(
 # Önmagában álló "MAGYAR" csak a hirdetés végén jellemző (pl. "... - MAGYAR"),
 # és csak a címben: a leírásban a "Windows 11 Pro - Magyar" az operációs rendszerre utal.
 HU_BARE_RE = re.compile(r"\bmagyar\b\s*[.!]?\s*$")
+
+# Csak a már felragasztott matrica számít. A "matricázható" / "matrica szett
+# hozzá" NEM: az azt jelenti, hogy a billentyűzet idegen, a matrica külön jár.
+HU_STICKER_RE = re.compile(r"\b(?:fel)?matricazott\b|\bmatricazva\b")
+
+
+@dataclass
+class KeyboardInfo:
+    layout: str | None = None  # "hu" | "foreign" | None
+    source: str | None = None  # "text" | "photo"
+    note: str | None = None
 
 STORAGE_VALUES = {120, 128, 240, 256, 320, 480, 500, 512, 640, 750, 1000, 1024, 2048, 4096}
 RAM_VALUES = {4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128}
@@ -237,25 +249,29 @@ def _is_new(text: str) -> bool:
     return bool(re.search(r"\buj\b", n))
 
 
-def _find_keyboard(text: str, title: str | None = None) -> str | None:
+def _find_keyboard(text: str, title: str | None = None) -> KeyboardInfo:
     n = norm(text)
-    # 1) Kifejezetten magyar (vagy magyarra átalakított) billentyűzet
+    # 1) Kifejezetten magyar billentyűzet
     if HU_KB_RE.search(n):
-        return "hu"
-    # 2) Kifejezetten külföldi – ez erősebb, mint a leírásban szereplő "magyar"
+        return KeyboardInfo("hu", "text")
+    # 2) Felragasztott magyar matrica (a "matricázható" nem számít)
+    if HU_STICKER_RE.search(n):
+        return KeyboardInfo("hu", "text", "matricás")
+    # 3) Kifejezetten külföldi – erősebb, mint a leírásban szereplő "magyar"
     #    (pl. "Windows 11 Pro - Magyar" mellett "Billentyűzet: UK")
     if FOREIGN_KB_RE.search(n):
-        return "foreign"
-    # 3) Önmagában "MAGYAR" csak a cím végén számít
+        return KeyboardInfo("foreign", "text")
+    # 4) Önmagában "MAGYAR" csak a cím végén számít
     if title and HU_BARE_RE.search(norm(title)):
-        return "hu"
-    return None
+        return KeyboardInfo("hu", "text")
+    return KeyboardInfo()
 
 
 def extract(text: str, title: str | None = None) -> Specs:
     """Specifikációk kinyerése a címből + leírásból."""
     text = _TRADEMARK_RE.sub("", text)
     title = _TRADEMARK_RE.sub("", title if title is not None else text)
+    keyboard = _find_keyboard(text, title)
     return Specs(
         gpus=_find_gpus(text),
         cpu=_find_cpu(text),
@@ -264,7 +280,9 @@ def extract(text: str, title: str | None = None) -> Specs:
         refresh_hz=_find_refresh(text),
         screen_inch=_find_screen(text),
         oled=bool(OLED_RE.search(text)),
-        keyboard=_find_keyboard(text, title),
+        keyboard=keyboard.layout,
+        keyboard_source=keyboard.source,
+        keyboard_note=keyboard.note,
         is_new=_is_new(text),
         warranty=_has_warranty(text),
     )

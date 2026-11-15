@@ -24,6 +24,8 @@ class Specs:
     screen_inch: float | None = None
     oled: bool = False
     keyboard: str | None = None  # "hu" | "foreign" | None (ismeretlen)
+    keyboard_source: str | None = None  # "text" | "photo"
+    keyboard_note: str | None = None  # pl. "matricás", "fotó alapján"
     is_new: bool = False
     warranty: bool = False
 
@@ -143,6 +145,7 @@ class Listing:
     intent: str = ""
     description: str = ""
     shipping: bool = False
+    images: list[str] = field(default_factory=list)
 
     specs: Specs = field(default_factory=Specs)
 

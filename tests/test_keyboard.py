@@ -52,6 +52,20 @@ def test_hungarian_windows_alone_is_not_a_keyboard():
     assert extract(text, "Dell Precision 7670").keyboard is None
 
 
+def test_applied_sticker_counts_as_hungarian():
+    specs = extract("Lenovo Legion 5, matricázott billentyűzet, szép állapot")
+    assert specs.keyboard == "hu"
+    assert specs.keyboard_note == "matricás"
+
+
+def test_sticker_kit_is_not_an_applied_sticker():
+    text = (
+        "Billentyűzet: UK, világítós. Magyar matrica szett hozzá ingyen, "
+        "magyarra matricázható."
+    )
+    assert extract(text, "Dell Precision 7670").keyboard == "foreign"
+
+
 def make_listing(text: str) -> Listing:
     listing = Listing(uadid="1", title=text, url="https://x", price=300_000)
     listing.specs = extract(text)
