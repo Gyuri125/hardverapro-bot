@@ -405,8 +405,8 @@ def load_config(path: str | Path) -> Config:
     if enabled not in {"auto", "on", "off"}:
         raise ConfigError("keyboard_vision.enabled: auto / on / off lehet")
     provider = str(v.get("provider") or "openai").strip().lower()
-    if provider not in {"openai", "anthropic"}:
-        raise ConfigError("keyboard_vision.provider: openai vagy anthropic lehet")
+    if provider not in {"openai", "anthropic", "gemini"}:
+        raise ConfigError("keyboard_vision.provider: openai, anthropic vagy gemini lehet")
     vision = VisionConfig(
         enabled=enabled,
         provider=provider,

@@ -220,12 +220,19 @@ market_compare:
 #           on    -> kötelező (figyelmeztet, ha nincs kulcs)
 #           off   -> kikapcsolva
 #
+#  provider: openai | anthropic | gemini
+#
 #  A kulcsot GitHub Secretként add hozzá:
-#    OPENAI_API_KEY  vagy  ANTHROPIC_API_KEY
+#    OPENAI_API_KEY  /  ANTHROPIC_API_KEY  /  GEMINI_API_KEY
+#
+#  Google AI Studio (ingyenes szint is van):
+#    provider: gemini
+#    model: gemini-2.5-flash
+#    api_key_env: GEMINI_API_KEY
 # ------------------------------------------------------------
 keyboard_vision:
   enabled: auto
-  provider: openai          # openai | anthropic
+  provider: openai          # openai | anthropic | gemini
   model: gpt-4o-mini
   api_key_env: OPENAI_API_KEY
   base_url: https://api.openai.com/v1

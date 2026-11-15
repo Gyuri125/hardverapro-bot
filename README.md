@@ -105,7 +105,7 @@ key is available.
 ```yaml
 keyboard_vision:
   enabled: auto            # auto | on | off
-  provider: openai         # openai | anthropic
+  provider: openai         # openai | anthropic | gemini
   model: gpt-4o-mini
   api_key_env: OPENAI_API_KEY
   max_checks_per_run: 5
@@ -113,6 +113,18 @@ keyboard_vision:
   min_confidence: 0.6
   exclude_foreign: true
 ```
+
+Provider presets:
+
+| Provider | `provider` | `model` | Secret name |
+| --- | --- | --- | --- |
+| OpenAI | `openai` | `gpt-4o-mini` | `OPENAI_API_KEY` |
+| Anthropic | `anthropic` | `claude-3-5-haiku-latest` | `ANTHROPIC_API_KEY` |
+| Google AI Studio | `gemini` | `gemini-2.5-flash` | `GEMINI_API_KEY` |
+
+For Gemini, `api_key_env` must be `GEMINI_API_KEY`. The Gemini provider downloads
+the photos and sends them inline (base64), because its native API does not fetch
+arbitrary image URLs. OpenAI and Anthropic receive the public image URLs directly.
 
 How it works:
 

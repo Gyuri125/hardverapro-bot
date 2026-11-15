@@ -13,6 +13,7 @@ A prompt szándékosan szigorú: ha a fotón nem látszik a billentyűzet,
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import logging
@@ -28,6 +29,9 @@ import requests
 from .config import VisionConfig
 
 log = logging.getLogger(__name__)
+
+GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+MAX_IMAGE_BYTES = 6_000_000
 
 PROMPT = (
     "You are inspecting photos of a used laptop to determine its keyboard layout.\n"
@@ -108,6 +112,8 @@ class VisionClient:
             return None
         if self.config.provider == "anthropic":
             return self._anthropic(urls)
+        if self.config.provider == "gemini":
+            return self._gemini(urls)
         return self._openai(urls)
 
     # ------------------------------------------------------------------
@@ -146,6 +152,52 @@ class VisionClient:
             headers,
             lambda data: data["content"][0]["text"],
         )
+
+    def _gemini(self, urls: list[str]) -> VisionResult | None:
+        """Gemini natív API: a képeket base64-ként küldjük (inline_data)."""
+        parts: list[dict] = [{"text": PROMPT}]
+        for url in urls:
+            content, mime = self._download(url)
+            if not content:
+                continue
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": mime,
+                        "data": base64.b64encode(content).decode("ascii"),
+                    }
+                }
+            )
+        if len(parts) == 1:
+            log.warning("Gemini: egyik kép sem tölthető le")
+            return None
+
+        endpoint = GEMINI_ENDPOINT.format(model=self.config.model) + f"?key={self.api_key}"
+        payload = {"contents": [{"parts": parts}]}
+        return self._post(
+            endpoint,
+            payload,
+            {},
+            lambda data: data["candidates"][0]["content"]["parts"][0]["text"],
+        )
+
+    def _download(self, url: str) -> tuple[bytes | None, str]:
+        try:
+            response = self.session.get(
+                url, timeout=30, headers={"User-Agent": "Mozilla/5.0 (apro-deal-radar)"}
+            )
+        except requests.RequestException as exc:
+            log.debug("Kép letöltési hiba (%s): %s", url, exc)
+            return None, ""
+        if response.status_code != 200 or not response.content:
+            return None, ""
+        if len(response.content) > MAX_IMAGE_BYTES:
+            log.debug("Kép túl nagy, kihagyva: %s", url)
+            return None, ""
+        mime = (response.headers.get("Content-Type") or "").split(";")[0].strip()
+        if not mime.startswith("image/"):
+            mime = "image/jpeg"
+        return response.content, mime
 
     def _post(self, url: str, payload: dict, headers: dict, extractor) -> VisionResult | None:
         for attempt in range(1, 3):

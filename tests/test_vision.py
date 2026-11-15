@@ -97,6 +97,56 @@ def test_anthropic_client_parses_answer(monkeypatch):
     assert result.layout == "foreign"
 
 
+class FakeGeminiSession:
+    """GET: képet ad vissza, POST: Gemini-választ."""
+
+    def __init__(self):
+        self.posts = 0
+        self.gets = 0
+
+    def get(self, url, timeout=None, headers=None):
+        self.gets += 1
+
+        class ImageResponse:
+            status_code = 200
+            content = b"\xff\xd8\xff\xe0fakejpeg"
+            headers = {"Content-Type": "image/jpeg"}
+
+        return ImageResponse()
+
+    def post(self, url, json=None, headers=None, timeout=None):
+        self.posts += 1
+        return FakeResponse(
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {"text": '{"layout":"hu","confidence":0.91,"evidence":"í és ű"}'}
+                            ]
+                        }
+                    }
+                ]
+            }
+        )
+
+
+def test_gemini_client_downloads_images_and_parses(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-test")
+    session = FakeGeminiSession()
+    client = VisionClient(
+        VisionConfig(
+            provider="gemini", model="gemini-2.5-flash", api_key_env="GEMINI_API_KEY"
+        ),
+        session=session,
+    )
+    result = client.analyze(["https://img/1.jpg", "https://img/2.jpg"])
+    assert result is not None
+    assert result.layout == "hu"
+    assert session.gets == 2
+    assert session.posts == 1
+
+
 def test_client_limits_images(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     session = FakeSession({"choices": [{"message": {"content": '{"layout":"hu","confidence":1}'}}]})
