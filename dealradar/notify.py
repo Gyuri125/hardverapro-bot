@@ -100,6 +100,25 @@ def _keyboard_field(hit: Hit) -> str:
     return "**nem derül ki**\nkérdezz rá az eladónál"
 
 
+def _screen_field(hit: Hit) -> str | None:
+    specs = hit.listing.specs
+    bits: list[str] = []
+    if specs.nits:
+        bits.append(f"{specs.nits} nit")
+    if specs.gamut:
+        bits.append(specs.gamut)
+    if not bits:
+        return None
+    value = " · ".join(bits)
+    if hit.screen_delta_pct is not None and hit.reference_nits:
+        sign = "+" if hit.screen_delta_pct >= 0 else ""
+        value += (
+            f"\n**{sign}{hit.screen_delta_pct:.0f}%** fényerő a te "
+            f"{hit.reference_nits} nitedhez képest"
+        )
+    return value
+
+
 def build_embed(hit: Hit) -> dict:
     listing = hit.listing
     specs = listing.specs
@@ -129,6 +148,12 @@ def build_embed(hit: Hit) -> dict:
             "inline": True,
         },
     ]
+    screen_value = _screen_field(hit)
+    if screen_value:
+        fields.insert(
+            5, {"name": "Kijelző", "value": _truncate(screen_value, 1024), "inline": True}
+        )
+
     if hit.over_budget and listing.price and hit.budget:
         over = listing.price - hit.budget
         fields.insert(

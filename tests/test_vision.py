@@ -166,6 +166,14 @@ def test_build_client_with_key(monkeypatch):
     assert build_client(VisionConfig()) is not None
 
 
+def test_gemini_key_fallback(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("GOOGLE_API_KEY", "AIza-google")
+    client = VisionClient(VisionConfig(provider="gemini", api_key_env="GEMINI_API_KEY"))
+    assert client.available is True
+    assert client.api_key_env == "GOOGLE_API_KEY"
+
+
 def test_build_client_off(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     assert build_client(VisionConfig(enabled="off")) is None

@@ -30,6 +30,13 @@ from .config import VisionConfig
 
 log = logging.getLogger(__name__)
 
+# Ha a beállított név nincs meg, ezeket is megnézzük (ugyanahhoz a providerhez).
+_KEY_FALLBACKS = {
+    "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY"),
+    "openai": ("OPENAI_API_KEY",),
+    "anthropic": ("ANTHROPIC_API_KEY",),
+}
+
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 MAX_IMAGE_BYTES = 6_000_000
 
@@ -100,7 +107,17 @@ class VisionClient:
     def __init__(self, config: VisionConfig, session: requests.Session | None = None) -> None:
         self.config = config
         self.session = session or requests.Session()
+        self.api_key_env = config.api_key_env
         self.api_key = os.environ.get(config.api_key_env) or None
+
+        if not self.api_key:
+            for name in _KEY_FALLBACKS.get(config.provider, ()):
+                value = os.environ.get(name)
+                if value:
+                    self.api_key = value
+                    self.api_key_env = name
+                    log.info("Vision kulcs a(z) %s változóból", name)
+                    break
 
     @property
     def available(self) -> bool:

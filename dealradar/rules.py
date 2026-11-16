@@ -83,10 +83,11 @@ def _contains_any(text: str, keywords: list[str]) -> bool:
 def _gpu_matches(listing: Listing, wanted: list[str]) -> bool:
     if not wanted:
         return True
-    gpus = [norm(g) for g in listing.specs.gpus]
-    if not gpus:
+    if not listing.specs.gpus:
         return False
-    return any(norm(w) in gpu for gpu in gpus for w in wanted)
+    # Csak az első (hirdetett) GPU számít: bolt-leírásokban több gép is szerepel.
+    primary = norm(listing.specs.gpus[0])
+    return any(norm(w) in primary for w in wanted)
 
 
 def _cpu_matches(listing: Listing, wanted: list[str]) -> bool:

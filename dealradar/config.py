@@ -157,9 +157,11 @@ class MarketCompare:
 
 @dataclass
 class ComparisonConfig:
-    """A hirdetett CPU összehasonlítása egy referencia processzorral."""
+    """A hirdetett gép összehasonlítása a felhasználó saját gépével."""
 
     reference_cpu: str | None = None
+    reference_screen_nits: int | None = None
+    reference_screen_name: str | None = None
 
 
 @dataclass
@@ -446,7 +448,17 @@ def load_config(path: str | Path) -> Config:
     comp = _require_mapping(data.get("comparison") or {}, "comparison")
     reference = comp.get("reference_cpu")
     comparison = ComparisonConfig(
-        reference_cpu=str(reference).strip() if reference else None
+        reference_cpu=str(reference).strip() if reference else None,
+        reference_screen_nits=(
+            None
+            if comp.get("reference_screen_nits") is None
+            else _as_int(comp.get("reference_screen_nits"), "comparison.reference_screen_nits")
+        ),
+        reference_screen_name=(
+            str(comp.get("reference_screen_name")).strip()
+            if comp.get("reference_screen_name")
+            else None
+        ),
     )
 
     return Config(

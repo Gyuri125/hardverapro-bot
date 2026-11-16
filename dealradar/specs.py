@@ -37,6 +37,9 @@ HZ_RE = re.compile(r"\b(\d{2,3})\s*Hz\b", re.I)
 MEMORY_RE = re.compile(r"\b(?:lp)?ddr\s?([345])(?:x)?\b", re.I)
 # Rövidített írásmód: "16G D5", "32G D4"
 MEMORY_SHORT_RE = re.compile(r"\b\d{1,3}\s?g\s?d([45])\b", re.I)
+NITS_RE = re.compile(r"\b(\d{3,4})\s*(?:nit|nits|cd/m2|cd/m²)\b", re.I)
+GAMUT_RE = re.compile(r"\b(\d{2,3})\s*%\s*(srgb|dci-?p3|adobe\s*rgb|ntsc)\b", re.I)
+RAM_D5_RE = re.compile(r"\b(\d{1,3})\s?g\s?d[45]\b", re.I)
 
 _INTEL_YEAR = {6: 2016, 7: 2017, 8: 2018, 9: 2019, 10: 2020, 11: 2021, 12: 2022, 13: 2023, 14: 2024}
 _AMD_SERIES_YEAR = {3000: 2020, 4000: 2020, 5000: 2021, 6000: 2022, 7000: 2023, 8000: 2024}
@@ -112,12 +115,13 @@ def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _find_gpus(text: str) -> list[str]:
+def _find_gpus(text: str, limit: int = 3) -> list[str]:
     found: list[str] = []
     for brand, number in GPU_RE.findall(text):
         gpu = f"{brand.lower()} {number.lower()}"
         if gpu not in found:
             found.append(gpu)
+    found = found[:limit]
 
     # Integrált grafikák (Iris Xe, UHD, Radeon 780M)
     if not found:
@@ -134,24 +138,40 @@ def _find_gpus(text: str) -> list[str]:
 
 
 def _find_cpu(text: str) -> str | None:
+    """A legkorábban előforduló CPU-jelöltet adja vissza.
+
+    Sorrend helyett pozíció számít: egy bolt-hirdetés leírásában sok gép
+    szerepel, és az első említés a hirdetett gép.
+    """
+    candidates: list[tuple[int, str]] = []
+
     match = (
         CPU_ULTRA_RE.search(text)
         or CPU_ULTRA_SHORT_RE.search(text)
         or CPU_INTEL_NUM_RE.search(text)
     )
     if match:
-        return f"ultra {match.group(1)} {match.group(2).upper()}"
+        candidates.append((match.start(), f"ultra {match.group(1)} {match.group(2).upper()}"))
 
     match = CPU_RYZEN_AI_RE.search(text)
     if match:
-        return f"ryzen ai {match.group(1)} {match.group(2).upper()}"
-    match = CPU_INTEL_RE.search(text) or CPU_INTEL_BARE_RE.search(text)
+        candidates.append((match.start(), f"ryzen ai {match.group(1)} {match.group(2).upper()}"))
+
+    match = CPU_INTEL_RE.search(text)
     if match:
-        return f"{match.group(1).lower()}-{match.group(2).upper()}"
+        candidates.append((match.start(), f"{match.group(1).lower()}-{match.group(2).upper()}"))
+
+    match = CPU_INTEL_BARE_RE.search(text)
+    if match:
+        candidates.append((match.start(), f"{match.group(1).lower()}-{match.group(2).upper()}"))
+
     match = CPU_RYZEN_RE.search(text)
     if match:
-        return f"ryzen {match.group(1)} {match.group(2).upper()}"
-    return None
+        candidates.append((match.start(), f"ryzen {match.group(1)} {match.group(2).upper()}"))
+
+    if not candidates:
+        return None
+    return min(candidates, key=lambda item: item[0])[1]
 
 
 def _context_ok(text: str, start: int, end: int) -> bool:
@@ -166,6 +186,12 @@ def _context_ok(text: str, start: int, end: int) -> bool:
 
 
 def _find_ram(text: str, title: str) -> int | None:
+    # "16G D5" / "32G D4" – a memória típusa egyértelműsíti
+    match = RAM_D5_RE.search(text)
+    if match:
+        value = int(match.group(1))
+        if 4 <= value <= 256:
+            return value
     for regex in (RAM_CTX_RE, RAM_LABEL_RE):
         for match in regex.finditer(text):
             if not _context_ok(text, match.start(), match.end()):
@@ -207,10 +233,15 @@ def _find_storage(text: str, title: str) -> int | None:
     for value, unit, _, _ in tokens:
         if unit == "GB" and value in STORAGE_VALUES and value >= 240:
             return value
+    # rövidítés: "512G", "1T" (csak tárolásra jellemző méretnél)
+    for match in re.finditer(r"\b(\d{2,4})\s?g\b", title, re.I):
+        value = int(match.group(1))
+        if value in STORAGE_VALUES and value >= 240:
+            return value
     return None
 
 
-def _find_screen(text: str) -> float | None:
+def _find_screen(text: str, allow_model_heuristics: bool = True) -> float | None:
     # 1) kifejezett hüvelyk: 15,6", 14 col, 16 hüvelyk, 14"-os
     for match in SCREEN_RE.finditer(text):
         raw = match.group(1).replace(",", ".")
@@ -220,6 +251,11 @@ def _find_screen(text: str) -> float | None:
             continue
         if 10.0 <= value <= 20.0:
             return value
+
+    # A modell-alapú tippek (15ACH6H, F15, "MacBook Pro 15") csak a címre
+    # érvényesek: egy bolt leírásában más gyártók gépei is szerepelnek.
+    if not allow_model_heuristics:
+        return None
 
     # 2) Lenovo-szerű modellszám: 15ACH6H, 16IRH8
     match = MODEL_CODE_SIZE_RE.search(text)
@@ -330,16 +366,33 @@ def extract(text: str, title: str | None = None) -> Specs:
     text = _TRADEMARK_RE.sub("", text)
     title = _TRADEMARK_RE.sub("", title if title is not None else text)
     keyboard = _find_keyboard(text, title)
-    cpu = _find_cpu(text)
+    # A cím a legmegbízhatóbb: bolt-hirdetések leírásában sok más gép szerepel.
+    cpu = _find_cpu(title) or _find_cpu(text)
+    gpus = _find_gpus(title) or _find_gpus(text)
+    screen = _find_screen(title) or _find_screen(text, allow_model_heuristics=False)
+    storage = _find_storage(title, title) or _find_storage(text, title)
+    ram = _find_ram(title, title) or _find_ram(text, title)
+
+    nits_match = NITS_RE.search(text)
+    gamut_match = GAMUT_RE.search(text)
+    nits = int(nits_match.group(1)) if nits_match else None
+    gamut: str | None = None
+    if gamut_match:
+        gamut_name = gamut_match.group(2)
+        gamut_name = "sRGB" if gamut_name.lower() == "srgb" else gamut_name.upper()
+        gamut = f"{gamut_match.group(1)}% {gamut_name}"
+
     return Specs(
-        gpus=_find_gpus(text),
+        gpus=gpus,
         cpu=cpu,
         cpu_year=_cpu_year(cpu),
         memory_gen=_memory_gen(text),
-        ram_gb=_find_ram(text, title),
-        storage_gb=_find_storage(text, title),
+        nits=nits,
+        gamut=gamut,
+        ram_gb=ram,
+        storage_gb=storage,
         refresh_hz=_find_refresh(text),
-        screen_inch=_find_screen(text),
+        screen_inch=screen,
         oled=bool(OLED_RE.search(text)),
         keyboard=keyboard.layout,
         keyboard_source=keyboard.source,

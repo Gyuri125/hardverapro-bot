@@ -273,6 +273,19 @@ def attach_comparison(config: Config, bench: Benchmarks, hits: list[Hit]) -> Non
     log.info("Összehasonlítás: %s (%d CPU Mark)", reference, ref.score)
 
 
+def attach_screen_comparison(config: Config, hits: list[Hit]) -> None:
+    """Fényerő-összehasonlítás a saját gép kijelzőjéhez (ha be van állítva)."""
+    reference = config.comparison.reference_screen_nits
+    if not reference:
+        return
+    for hit in hits:
+        nits = hit.listing.specs.nits
+        if not nits:
+            continue
+        hit.screen_delta_pct = (nits - reference) / reference * 100.0
+        hit.reference_nits = reference
+
+
 def self_check(config: Config) -> int:
     """Környezet ellenőrzése: konfiguráció, Discord webhook, Hardverapró."""
     problems = 0
@@ -517,6 +530,7 @@ def run(args: argparse.Namespace) -> int:
     if new_hits:
         bench = attach_benchmarks(fetcher, new_hits)
         attach_comparison(config, bench, new_hits)
+        attach_screen_comparison(config, new_hits)
 
     if excluded:
         excluded_ids = {id(hit) for hit in excluded}
