@@ -471,8 +471,24 @@
    "profile": "RTX 5050 / 4060 – 400 alatt",
    "score": 78,
    "title": "MSI CYBORG 15 RTX 5050 i7-13620H. Gamer laptop"
+  },
+  "7805133": {
+   "first_seen": "2026-11-18T13:11:24+00:00",
+   "notified_at": "2026-11-18T13:11:24+00:00",
+   "price": 249990,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 67,
+   "title": "ROG Strix G513RC 15.6\" FHD IPS Ryzen 7 6800HS RTX 3050 16GB 512GB NVMe magyar vbill gar"
+  },
+  "7805230": {
+   "first_seen": "2026-11-18T13:11:24+00:00",
+   "notified_at": "2026-11-18T13:11:24+00:00",
+   "price": 449000,
+   "profile": "OLED bármilyen gép – 450 alatt",
+   "score": 60,
+   "title": "ASUS Zenbook S 16 UM5606WA-RK222W HX 370 / 32 GB / 2 TB / 120 Hz OLED"
   }
  },
- "updated_at": "2026-11-17T22:31:14+00:00",
+ "updated_at": "2026-11-18T13:11:24+00:00",
  "version": 1
 }
