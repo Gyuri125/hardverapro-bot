@@ -280,6 +280,14 @@
    "score": 73,
    "title": "MSI Thin GF63 12VE - 15,6\" - 144Hz - RTX 4050 - I5 12450H - 32Gb -512GB SSD"
   },
+  "7794414": {
+   "first_seen": "2026-11-18T22:02:04+00:00",
+   "notified_at": "2026-11-18T22:02:04+00:00",
+   "price": 289000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 58,
+   "title": "Dell G15 5530 Gamer Laptop, dobozos, hibátlan (i5-13450HX, 4050, 16GB, 512GB SSD)"
+  },
   "7794454": {
    "first_seen": "2026-11-14T23:05:42+00:00",
    "notified_at": "2026-11-14T23:05:42+00:00",
@@ -495,8 +503,40 @@
    "profile": "RTX 5050 / 4060 – 400 alatt",
    "score": 83,
    "title": "Acer Nitro Magyar 2029.12hó Garis Gamer Laptop 165Hz Ryzen 5 7535HS 16GB DDR5 RTX 4060 8GB Dobozába"
+  },
+  "7805844": {
+   "first_seen": "2026-11-18T22:02:04+00:00",
+   "notified_at": "2026-11-18T22:02:04+00:00",
+   "price": 299990,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 81,
+   "title": "MSI Cyborg 15 A13V i7-13620H/ RTX 4060/ 16 Gb DDR5 /512 Nvme"
+  },
+  "7805871": {
+   "first_seen": "2026-11-18T22:02:04+00:00",
+   "notified_at": "2026-11-18T22:02:04+00:00",
+   "price": 459990,
+   "profile": "RTX 4070 / 4080 – 450 alatt",
+   "score": 55,
+   "title": "MSI Pulse 15 Prémium GAMER Laptop 15,6\" QHD 240 Hz/Core i7/16GB/1 TB SSD/RTX4070/WIN11"
+  },
+  "7806049": {
+   "first_seen": "2026-11-18T22:02:04+00:00",
+   "notified_at": "2026-11-18T22:02:04+00:00",
+   "price": 179000,
+   "profile": "Üzleti érték – 32 GB RAM + 1 TB SSD, 320 alatt",
+   "score": 99,
+   "title": "MacBook Pro 16 (2019) i9 / 32 GB RAM / 1 TB SSD asztroszürke"
+  },
+  "7806054": {
+   "first_seen": "2026-11-18T22:02:04+00:00",
+   "notified_at": "2026-11-18T22:02:04+00:00",
+   "price": 209000,
+   "profile": "Üzleti érték – 32 GB RAM + 1 TB SSD, 320 alatt",
+   "score": 98,
+   "title": "MacBook Pro 16 (2019) i9 / 32 GB RAM / 1 TB SSD / Radeon Pro 5500M 8 GB asztroszürke"
   }
  },
- "updated_at": "2026-11-18T13:29:40+00:00",
+ "updated_at": "2026-11-18T22:02:04+00:00",
  "version": 1
 }
