@@ -20,10 +20,12 @@ CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.
 # "Intel 7 240H" / "Ultra 7 240H" (a "Core" szó elhagyva)
 CPU_ULTRA_SHORT_RE = re.compile(r"\b(?:intel\s+|core\s+)?ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
-CPU_INTEL_RE = re.compile(r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?(\d{4,5}[a-z]{0,3}\d{0,2})\b", re.I)
-CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?(\d{4,5}[a-zA-Z]{0,3}\d{0,2})\b")
-CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+(\d{3,4}[a-z]{0,3})\b", re.I)
-CPU_RYZEN_AI_RE = re.compile(r"\bryzen\s+ai\s+([3579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+CPU_INTEL_RE = re.compile(
+    r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?\(?(\d{4,5}[a-z]{0,3}\d{0,2})\b", re.I
+)
+CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?\(?(\d{4,5}[a-zA-Z]{0,3}\d{0,2})\b")
+CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+\(?(\d{3,4}[a-z]{0,3})\b", re.I)
+CPU_RYZEN_AI_RE = re.compile(r"\bryzen\s+ai\s+([3579])\s+(hx\s+)?(\d{3}[a-z]{0,2})\b", re.I)
 
 RAM_CTX_RE = re.compile(r"(\d{1,3})\s*GB\s*(?:DDR\d?|RAM)\b", re.I)
 RAM_LABEL_RE = re.compile(r"\bRAM\b[^0-9]{0,12}(\d{1,3})\s*GB", re.I)
@@ -87,6 +89,8 @@ HU_KB_RE = re.compile(
     r"hun billentyu|hu billentyu|magyarra lezerezve|magyarra lezerezett|"
     r"\bhungarian keyboard\b|\bhungarian layout\b|\bHUN\b)"
 )
+# "Magyar, háttérvilágításos billentyűzet" – a magyar szó a billentyűzet előtt
+HU_NEAR_KB_RE = re.compile(r"\bmagyar\b[^.\n]{0,30}\bbillentyu")
 # Önmagában álló "MAGYAR" csak a hirdetés végén jellemző (pl. "... - MAGYAR"),
 # és csak a címben: a leírásban a "Windows 11 Pro - Magyar" az operációs rendszerre utal.
 HU_BARE_RE = re.compile(r"\bmagyar\b\s*[.!]?\s*$")
@@ -155,7 +159,10 @@ def _find_cpu(text: str) -> str | None:
 
     match = CPU_RYZEN_AI_RE.search(text)
     if match:
-        candidates.append((match.start(), f"ryzen ai {match.group(1)} {match.group(2).upper()}"))
+        hx = (match.group(2) or "").strip()
+        model = match.group(3).upper()
+        label = f"ryzen ai {match.group(1)} {hx + ' ' if hx else ''}{model}".strip()
+        candidates.append((match.start(), label))
 
     match = CPU_INTEL_RE.search(text)
     if match:
@@ -300,7 +307,7 @@ def _is_new(text: str) -> bool:
 def _find_keyboard(text: str, title: str | None = None) -> KeyboardInfo:
     n = norm(text)
     # 1) Kifejezetten magyar billentyűzet
-    if HU_KB_RE.search(n):
+    if HU_KB_RE.search(n) or HU_NEAR_KB_RE.search(n):
         return KeyboardInfo("hu", "text")
     # 2) Felragasztott magyar matrica (a "matricázható" nem számít)
     if HU_STICKER_RE.search(n):

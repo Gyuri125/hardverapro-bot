@@ -65,6 +65,11 @@ watches:
         - javított
         - vízkár
         - lopott
+        # Apple kizárva: nem érdekes, és ebben az árban nem jó vétel
+        - macbook
+        - mac book
+        - macos
+        - apple
 
       # MAGYAR BILLENTYŰZET: a kifejezetten külföldi (német/US/UK)
       # billentyűzetű gépeket kiszűri. Ha a hirdetés nem írja,

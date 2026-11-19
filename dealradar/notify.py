@@ -102,14 +102,19 @@ def _keyboard_field(hit: Hit) -> str:
 
 def _screen_field(hit: Hit) -> str | None:
     specs = hit.listing.specs
-    bits: list[str] = []
-    if specs.nits:
-        bits.append(f"{specs.nits} nit")
-    if specs.gamut:
-        bits.append(specs.gamut)
-    if not bits:
+    line = specs.screen_line()
+    if not line:
         return None
-    value = " · ".join(bits)
+
+    missing: list[str] = []
+    if not specs.nits:
+        missing.append("fényerő: nincs adat")
+    if not specs.gamut:
+        missing.append("színhűség: nincs adat")
+
+    value = line
+    if missing:
+        value += "\n" + " · ".join(missing)
     if hit.screen_delta_pct is not None and hit.reference_nits:
         sign = "+" if hit.screen_delta_pct >= 0 else ""
         value += (

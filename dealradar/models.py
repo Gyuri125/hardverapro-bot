@@ -61,7 +61,7 @@ class Specs:
         return " · ".join(parts)
 
     def details(self) -> str:
-        """Rövid felsorolás a Discord leíráshoz (CPU/GPU nélkül, az külön mező)."""
+        """Rövid felsorolás a Discord leíráshoz (CPU/GPU/kijelző külön mező)."""
         parts: list[str] = []
         if self.ram_gb:
             parts.append(f"{self.ram_gb} GB RAM")
@@ -69,22 +69,27 @@ class Specs:
             parts.append(
                 f"{self.storage_gb} GB SSD" if self.storage_gb < 1024 else f"{self.storage_gb // 1024} TB SSD"
             )
-        if self.screen_inch:
-            parts.append(f"{self.screen_inch:g}\"")
         if self.memory_gen:
             parts.append(f"DDR{self.memory_gen}")
-        if self.nits:
-            parts.append(f"{self.nits} nit")
-        if self.gamut:
-            parts.append(self.gamut)
-        if self.refresh_hz:
-            parts.append(f"{self.refresh_hz} Hz")
-        if self.oled:
-            parts.append("OLED")
         if self.is_new:
             parts.append("ÚJ")
         if self.warranty:
             parts.append("garanciás")
+        return " · ".join(parts)
+
+    def screen_line(self) -> str:
+        """Kijelző-adatok: méret, frissítés, panel, fényerő, színhűség."""
+        parts: list[str] = []
+        if self.screen_inch:
+            parts.append(f"{self.screen_inch:g}\"")
+        if self.refresh_hz:
+            parts.append(f"{self.refresh_hz} Hz")
+        if self.oled:
+            parts.append("OLED")
+        if self.nits:
+            parts.append(f"{self.nits} nit")
+        if self.gamut:
+            parts.append(self.gamut)
         return " · ".join(parts)
 
     @property

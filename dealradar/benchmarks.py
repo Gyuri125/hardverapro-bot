@@ -49,6 +49,8 @@ def cpu_queries(cpu: str) -> list[str]:
         return [f"Intel Core Ultra {rest}"]
     if n.startswith("ryzen"):
         rest = cpu.split(" ", 1)[1] if " " in cpu else cpu
+        rest = re.sub(r"\bai\b", "AI", rest, flags=re.I)
+        rest = re.sub(r"\bhx\b", "HX", rest, flags=re.I)
         return [f"AMD Ryzen {rest}", f"AMD {cpu}"]
     if n.startswith(("xeon", "pentium", "celeron")):
         return [f"Intel {cpu}"]
