@@ -25,6 +25,8 @@ CPU_INTEL_RE = re.compile(
 )
 CPU_INTEL_BARE_RE = re.compile(r"\b([iI][3579])[-\s]?\(?(\d{4,5}[a-zA-Z]{0,3}\d{0,2})\b")
 CPU_RYZEN_RE = re.compile(r"\bryzen\s?([3579])\s+\(?(\d{3,4}[a-z]{0,3})\b", re.I)
+# Rövidítés: "R7 5800H", "R5 5600H"
+CPU_RYZEN_SHORT_RE = re.compile(r"\bR([3579])\s?[- ]?(\d{4}[A-Za-z]{0,3})\b")
 CPU_RYZEN_AI_RE = re.compile(r"\bryzen\s+ai\s+([3579])\s+(hx\s+)?(\d{3}[a-z]{0,2})\b", re.I)
 
 RAM_CTX_RE = re.compile(r"(\d{1,3})\s*GB\s*(?:DDR\d?|RAM)\b", re.I)
@@ -173,6 +175,10 @@ def _find_cpu(text: str) -> str | None:
         candidates.append((match.start(), f"{match.group(1).lower()}-{match.group(2).upper()}"))
 
     match = CPU_RYZEN_RE.search(text)
+    if match:
+        candidates.append((match.start(), f"ryzen {match.group(1)} {match.group(2).upper()}"))
+
+    match = CPU_RYZEN_SHORT_RE.search(text)
     if match:
         candidates.append((match.start(), f"ryzen {match.group(1)} {match.group(2).upper()}"))
 

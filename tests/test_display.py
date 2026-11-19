@@ -85,6 +85,28 @@ def test_cpu_in_parentheses():
     assert extract("Intel Core i5 (1240P)").cpu == "i5-1240P"
 
 
+def test_ryzen_short_form():
+    assert extract("R7 5800H / RTX 3060").cpu == "ryzen 7 5800H"
+    assert extract("R5 5600H, 16GB").cpu == "ryzen 5 5600H"
+
+
+def test_radeon_integrated_tier():
+    from dealradar.models import Specs
+
+    assert Specs(gpus=["radeon 890m"]).gpu_tier == 3
+    assert Specs(gpus=["radeon 780m"]).gpu_tier == 2
+    assert Specs(gpus=["iris xe"]).gpu_tier == 1
+    assert Specs(gpus=["uhd graphics"]).gpu_tier == 0
+
+
+def test_gpu_capability_label():
+    from dealradar.notify import gpu_capability
+
+    assert "1080p" in gpu_capability(8056)
+    assert "4K" in gpu_capability(30000)
+    assert gpu_capability(0) == "alap felhasználás, régebbi játékok"
+
+
 def test_hungarian_keyboard_with_comma():
     specs = extract("• Magyar, háttérvilágításos billentyűzet")
     assert specs.keyboard == "hu"

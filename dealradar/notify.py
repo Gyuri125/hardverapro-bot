@@ -74,12 +74,35 @@ def _cpu_field(hit: Hit) -> str:
     return value
 
 
+GPU_CLASSES = [
+    (26000, "4K/1440p, AAA játékok magas beállításon"),
+    (19000, "1440p magas / 1080p ultra"),
+    (14000, "1080p magas, AAA játékok közepes–magas"),
+    (10000, "1080p közepes–magas"),
+    (7000, "1080p közepes, e-sport magas FPS"),
+    (4500, "1080p alacsony–közepes"),
+    (0, "alap felhasználás, régebbi játékok"),
+]
+
+
+def gpu_capability(score: int) -> str:
+    """PassMark G3D Mark -> rövid, emberi kategória."""
+    for limit, label in GPU_CLASSES:
+        if score >= limit:
+            return label
+    return ""
+
+
 def _gpu_field(hit: Hit) -> str:
     if not hit.listing.specs.gpus:
         return "–"
     name = _label(hit.listing.specs.gpus[0].upper())
     if hit.gpu_bench:
-        return f"[{name}]({hit.gpu_bench.url})\nG3D Mark: **{_markdown_number(hit.gpu_bench.score)}**"
+        value = f"[{name}]({hit.gpu_bench.url})\nG3D Mark: **{_markdown_number(hit.gpu_bench.score)}**"
+        capability = gpu_capability(hit.gpu_bench.score)
+        if capability:
+            value += f"\n{capability}"
+        return value
     return name
 
 

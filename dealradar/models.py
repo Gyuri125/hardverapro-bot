@@ -110,7 +110,17 @@ _GENERATION_TABLE: dict[int, dict[int, int]] = {
 
 def _gpu_tier(gpu: str) -> int:
     """'rtx 4060' -> 3, 'rtx 5090' -> 5, 'rx 7800' -> 4, ismeretlen -> 0."""
+    if gpu.startswith("iris"):
+        return 1
+    if gpu.startswith("uhd"):
+        return 0
+
     model = gpu.split()[-1]
+
+    if gpu.startswith("radeon"):
+        # Integrált Radeon (890M, 880M, 780M, 760M)
+        return {"890m": 3, "880m": 2, "780m": 2, "760m": 1, "740m": 1, "680m": 1}.get(model, 0)
+
     digits = "".join(ch for ch in model if ch.isdigit())
     if not digits:
         return 0
