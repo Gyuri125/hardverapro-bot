@@ -304,6 +304,14 @@
    "score": 58,
    "title": "GIGABYTE G5 MF5 - 15,6\", 144 Hz, i7-13620H, 16GB DDR5, RTX 4050, 1TB M2 SSD - Windows 11"
   },
+  "7795089": {
+   "first_seen": "2026-11-19T13:20:07+00:00",
+   "notified_at": "2026-11-19T13:20:07+00:00",
+   "price": 219000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 84,
+   "title": "ASUS TUF Dash F15 (2022) - i7-12650H / RTX 3050 Ti / 16GB DDR5 / 1 TB SSD"
+  },
   "7795375": {
    "first_seen": "2026-11-15T12:03:29+00:00",
    "notified_at": "2026-11-15T12:03:29+00:00",
@@ -450,11 +458,11 @@
   },
   "7803531": {
    "first_seen": "2026-11-17T13:34:17+00:00",
-   "notified_at": "2026-11-17T13:34:17+00:00",
-   "price": 439980,
+   "notified_at": "2026-11-19T13:20:07+00:00",
+   "price": 359980,
    "profile": "RTX 5060 / 5070 – 450 alatt",
-   "score": 66,
-   "title": "Asus TUF Gaming FA608UMI-TU262 gamer 16\" 144Hz, AMD Ryzen 7 260, 16GB ,512GB SSD,RTX 5060 8GB GDDR7"
+   "score": 95,
+   "title": "Asus TUF Gaming FA608UMI-TU262 16\" 144Hz, Ryzen 7 260,16GB ,512GB SSD,RTX 5060 8GB. (Új Bontatlan)"
   },
   "7803581": {
    "first_seen": "2026-11-17T13:34:17+00:00",
@@ -535,8 +543,16 @@
    "profile": "Üzleti érték – 32 GB RAM + 1 TB SSD, 320 alatt",
    "score": 98,
    "title": "MacBook Pro 16 (2019) i9 / 32 GB RAM / 1 TB SSD / Radeon Pro 5500M 8 GB asztroszürke"
+  },
+  "7806655": {
+   "first_seen": "2026-11-19T13:20:07+00:00",
+   "notified_at": "2026-11-19T13:20:07+00:00",
+   "price": 349999,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 70,
+   "title": "Lenovo LOQ 15IRX9 i5-13450HX RTX 4060 16GB RAM 1TB SSD + Genesis hűtőpad"
   }
  },
- "updated_at": "2026-11-18T22:02:04+00:00",
+ "updated_at": "2026-11-19T13:20:07+00:00",
  "version": 1
 }
