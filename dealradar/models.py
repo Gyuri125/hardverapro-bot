@@ -202,5 +202,7 @@ class Hit:
     reference_score: int | None = None
     screen_delta_pct: float | None = None
     reference_nits: int | None = None
+    gamut_delta_pct: float | None = None
+    reference_srgb: int | None = None
     cpu_bench: BenchResult | None = None
     gpu_bench: BenchResult | None = None

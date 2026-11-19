@@ -162,6 +162,7 @@ class ComparisonConfig:
     reference_cpu: str | None = None
     reference_screen_nits: int | None = None
     reference_screen_name: str | None = None
+    reference_screen_srgb: int | None = None
 
 
 @dataclass
@@ -458,6 +459,11 @@ def load_config(path: str | Path) -> Config:
             str(comp.get("reference_screen_name")).strip()
             if comp.get("reference_screen_name")
             else None
+        ),
+        reference_screen_srgb=(
+            None
+            if comp.get("reference_screen_srgb") is None
+            else _as_int(comp.get("reference_screen_srgb"), "comparison.reference_screen_srgb")
         ),
     )
 

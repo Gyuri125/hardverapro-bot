@@ -144,6 +144,12 @@ def _screen_field(hit: Hit) -> str | None:
             f"\n**{sign}{hit.screen_delta_pct:.0f}%** fényerő a te "
             f"{hit.reference_nits} nitedhez képest"
         )
+    if hit.gamut_delta_pct is not None and hit.reference_srgb:
+        sign = "+" if hit.gamut_delta_pct >= 0 else ""
+        value += (
+            f"\n**{sign}{hit.gamut_delta_pct:.0f}%** színtartomány a te "
+            f"{hit.reference_srgb}% sRGB-det képest"
+        )
     return value
 
 

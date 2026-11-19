@@ -58,13 +58,16 @@ def test_screen_field_shows_brightness_comparison():
     listing.specs.gamut = "100% sRGB"
 
     hit = Hit(listing=listing, profile="p", score=80)
-    hit.screen_delta_pct = 66.7
-    hit.reference_nits = 300
+    hit.screen_delta_pct = 100.0
+    hit.reference_nits = 250
+    hit.gamut_delta_pct = 61.3
+    hit.reference_srgb = 62
 
     fields = {f["name"]: f["value"] for f in build_embed(hit)["fields"]}
     assert "500 nit" in fields["Kijelző"]
     assert "100% sRGB" in fields["Kijelző"]
-    assert "+67%" in fields["Kijelző"]
+    assert "+100%" in fields["Kijelző"]
+    assert "+61%" in fields["Kijelző"]
 
 
 def test_storage_shorthand_in_title():

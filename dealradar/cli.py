@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -274,16 +275,23 @@ def attach_comparison(config: Config, bench: Benchmarks, hits: list[Hit]) -> Non
 
 
 def attach_screen_comparison(config: Config, hits: list[Hit]) -> None:
-    """Fényerő-összehasonlítás a saját gép kijelzőjéhez (ha be van állítva)."""
-    reference = config.comparison.reference_screen_nits
-    if not reference:
-        return
+    """Fényerő- és színhűség-összehasonlítás a saját gép kijelzőjéhez."""
+    ref_nits = config.comparison.reference_screen_nits
+    ref_srgb = config.comparison.reference_screen_srgb
+
     for hit in hits:
-        nits = hit.listing.specs.nits
-        if not nits:
-            continue
-        hit.screen_delta_pct = (nits - reference) / reference * 100.0
-        hit.reference_nits = reference
+        specs = hit.listing.specs
+
+        if ref_nits and specs.nits:
+            hit.screen_delta_pct = (specs.nits - ref_nits) / ref_nits * 100.0
+            hit.reference_nits = ref_nits
+
+        if ref_srgb and specs.gamut:
+            match = re.search(r"(\d{2,3})%\s*srgb", specs.gamut, re.I)
+            if match:
+                coverage = int(match.group(1))
+                hit.gamut_delta_pct = (coverage - ref_srgb) / ref_srgb * 100.0
+                hit.reference_srgb = ref_srgb
 
 
 def self_check(config: Config) -> int:
