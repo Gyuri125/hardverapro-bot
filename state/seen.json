@@ -456,6 +456,14 @@
    "score": 63,
    "title": "Lenovo LOQ Gamer Laptop(i5, 24gb DDR5, rtx 4060)"
   },
+  "7802570": {
+   "first_seen": "2026-11-21T12:46:22+00:00",
+   "notified_at": "2026-11-21T12:46:22+00:00",
+   "price": 320000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 78,
+   "title": "Msi cyborg 15 a13v"
+  },
   "7802755": {
    "first_seen": "2026-11-16T23:28:20+00:00",
    "notified_at": "2026-11-16T23:28:20+00:00",
@@ -591,8 +599,24 @@
    "profile": "OLED bármilyen gép – 450 alatt",
    "score": 83,
    "title": "ÚJ HP SPECTRE X360 16\" 2.8K OLED Ultra7 155H RTX4050 16GBDDR5/1TB Dobozos!"
+  },
+  "7809927": {
+   "first_seen": "2026-11-21T12:46:22+00:00",
+   "notified_at": "2026-11-21T12:46:22+00:00",
+   "price": 295000,
+   "profile": "RTX 3060 / 3070 – 330 alatt",
+   "score": 59,
+   "title": "ASUS ROG Strix G513 Ryzen 7 / RTX 3060 / 24 GB DDR5 / 15,6 300 Hz Keveset használt!"
+  },
+  "7810007": {
+   "first_seen": "2026-11-21T12:46:22+00:00",
+   "notified_at": "2026-11-21T12:46:22+00:00",
+   "price": 365000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 55,
+   "title": "Új ASUS 2029ig Garis Magyar Gamer Laptop 16\" 144hz Intel 7 240H RTX 5050 8GB 3ciklus! Új ára 630e!!"
   }
  },
- "updated_at": "2026-11-20T21:53:56+00:00",
+ "updated_at": "2026-11-21T12:46:22+00:00",
  "version": 1
 }
