@@ -317,6 +317,30 @@ def self_check(config: Config) -> int:
             vision_state = "nincs API-kulcs, kihagyva"
         log.info("Billentyűzet-vision: %s", vision_state)
         _ci_notice(f"Billentyűzet-vision: {vision_state}")
+
+        # Diagnosztika: melyik változó látszik egyáltalán? (Értéket nem írunk ki.)
+        key_names = (
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "GOOGLE_GENAI_API_KEY",
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+        )
+        summary_lines = ["| Változó | Állapot |", "|---|---|"]
+        for name in key_names:
+            value = os.environ.get(name)
+            status = f"beállítva ({len(value)} karakter)" if value else "nincs"
+            log.info("  %s: %s", name, status)
+            _ci_notice(f"{name}: {status}")
+            summary_lines.append(f"| `{name}` | {status} |")
+
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_path:
+            try:
+                with open(summary_path, "a", encoding="utf-8") as handle:
+                    handle.write("### API-kulcsok\n\n" + "\n".join(summary_lines) + "\n")
+            except OSError:  # pragma: no cover
+                pass
     else:
         ok, message = client.check_model()
         if ok:
