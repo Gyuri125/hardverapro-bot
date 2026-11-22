@@ -20,6 +20,8 @@ CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.
 # "Intel 7 240H" / "Ultra 7 240H" (a "Core" szó elhagyva)
 CPU_ULTRA_SHORT_RE = re.compile(r"\b(?:intel\s+|core\s+)?ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+# "Intel Core 7 240H" (Series 2, nem Ultra)
+CPU_CORE_RE = re.compile(r"\bcore\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 CPU_INTEL_RE = re.compile(
     r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?\(?(\d{4,5}[a-z]{0,3}\d{0,2})\b", re.I
 )
@@ -81,9 +83,10 @@ OLED_RE = re.compile(r"\boled\b", re.I)
 # "külföldi / német / US billentyűzet" – ezt ki kell szűrni, ha magyar kell
 FOREIGN_KB_RE = re.compile(
     r"(kulfoldi billentyu|nem magyar billentyu|nemet billentyu|us billentyu|"
-    r"uk billentyu|angol billentyu|"
-    r"\b(?:angol|nemet|francia|olasz|spanyol|orosz|ukran|uk|us|de)\s+kiosztas|"
-    r"billentyuzet\s*[:\-]\s*(?:angol|nemet|us|uk|francia|olasz|spanyol|orosz)\b|"
+    r"uk billentyu|angol billentyu|amerikai billentyu|amerikai kiosztas|"
+    r"usa billentyu|us layout|uk layout|english keyboard|"
+    r"\b(?:angol|nemet|francia|olasz|spanyol|orosz|ukran|uk|us|de|amerikai|usa)\s+kiosztas|"
+    r"billentyuzet\s*[:\-]\s*(?:angol|nemet|us|uk|francia|olasz|spanyol|orosz|amerikai)\b|"
     r"kiosztas\s*:\s*(?:us|uk|de|nemet|angol|kulfoldi))"
 )
 HU_KB_RE = re.compile(
@@ -154,10 +157,17 @@ def _find_cpu(text: str) -> str | None:
     match = (
         CPU_ULTRA_RE.search(text)
         or CPU_ULTRA_SHORT_RE.search(text)
-        or CPU_INTEL_NUM_RE.search(text)
     )
     if match:
         candidates.append((match.start(), f"ultra {match.group(1)} {match.group(2).upper()}"))
+
+    match = CPU_CORE_RE.search(text)
+    if match:
+        candidates.append((match.start(), f"core {match.group(1)} {match.group(2).upper()}"))
+
+    match = CPU_INTEL_NUM_RE.search(text)
+    if match:
+        candidates.append((match.start(), f"core {match.group(1)} {match.group(2).upper()}"))
 
     match = CPU_RYZEN_AI_RE.search(text)
     if match:
@@ -341,6 +351,12 @@ def _cpu_year(cpu: str | None) -> int | None:
     n = norm(cpu)
 
     if n.startswith("ultra"):
+        match = re.search(r"\b(\d{3})", n)
+        if match:
+            return {1: 2024, 2: 2025, 3: 2026}.get(int(match.group(1)[0]))
+        return None
+
+    if n.startswith("core"):
         match = re.search(r"\b(\d{3})", n)
         if match:
             return {1: 2024, 2: 2025, 3: 2026}.get(int(match.group(1)[0]))

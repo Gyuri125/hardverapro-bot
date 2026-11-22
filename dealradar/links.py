@@ -22,16 +22,22 @@ _TOKEN_RE = re.compile(r"[^\s/|,()\[\]]+")
 
 
 def cpu_manufacturer_url(cpu: str | None) -> str | None:
-    """A CPU gyártójának (Intel / AMD) keresőoldala."""
+    """A CPU gyártójának oldala.
+
+    Az Intel/AMD közvetlen termékoldalát nem tudjuk megbízhatóan kitalálni
+    (az Intel botokat blokkol), ezért site-keresést adunk: az első találat
+    a gyártó adatlapja.
+    """
     if not cpu:
         return None
     n = norm(cpu)
-    query = quote_plus(cpu)
     if n.startswith(("ryzen", "athlon", "threadripper", "a-series")):
-        return f"https://www.amd.com/en/search.html?q={query}"
-    if n.startswith(("i3", "i5", "i7", "i9", "ultra", "pentium", "celeron", "xeon")):
-        return f"https://www.intel.com/content/www/us/en/products/search.html?q={query}"
-    return None
+        site = "amd.com"
+    elif n.startswith(("i3", "i5", "i7", "i9", "ultra", "core", "pentium", "celeron", "xeon")):
+        site = "intel.com"
+    else:
+        return None
+    return "https://www.google.com/search?q=" + quote_plus(f'site:{site} "{cpu}" specifikáció')
 
 
 def specs_query(title: str, max_tokens: int = 7) -> str:

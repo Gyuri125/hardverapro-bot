@@ -59,7 +59,17 @@ def test_integrated_gpu_detection():
 def test_intel_ultra_variants():
     assert extract("Core Ultra 7 155H").cpu == "ultra 7 155H"
     assert extract("Ultra 7 240H RTX 5050").cpu == "ultra 7 240H"
-    assert extract("Intel 7 240H RTX 5050 8GB").cpu == "ultra 7 240H"
+    assert extract("Intel 7 240H RTX 5050 8GB").cpu == "core 7 240H"
+
+
+def test_core_7_240h_year():
+    assert extract("Intel 7 240H").cpu_year == 2025
+    assert extract("Intel Core 7 240H").cpu_year == 2025
+
+
+def test_american_keyboard():
+    assert extract("2025-ös amerika import modell. Amerikai billentyűzettel.").keyboard == "foreign"
+    assert extract("US layout keyboard").keyboard == "foreign"
 
 
 def make_listing(text: str) -> Listing:

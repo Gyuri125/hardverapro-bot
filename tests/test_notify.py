@@ -38,7 +38,7 @@ def test_cpu_field_links_to_manufacturer_and_shows_score():
     hit.cpu_bench = BenchResult("Intel Core i7-14700HX", 36314, "https://www.cpubenchmark.net/x", "cpu")
     embed = build_embed(hit)
     value = fields_of(embed)["Processzor"]
-    assert "](https://www.intel.com/" in value
+    assert "site%3Aintel.com" in value
     assert "36 314" in value
     assert "i7-14700HX" in value
 
