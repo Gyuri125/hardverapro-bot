@@ -67,6 +67,9 @@ class Settings:
     renotify_price_drop_percent: int = 10
     deep_scan: bool = True
     deep_scan_limit: int = 40
+    # Napi összefoglaló üzenet (a beállított óra után, naponta egyszer)
+    daily_summary: bool = True
+    daily_summary_hour: int = 18
 
     @property
     def webhook_url(self) -> str | None:
@@ -153,6 +156,8 @@ class MarketCompare:
     group_by: str = "gpu"
     min_samples: int = 10
     good_deal_discount: float = 0.20
+    # Ez alatt a medián alatt "gyanúsan olcsó" jelzést kap a hirdetés
+    cheap_threshold: float = 0.60
 
 
 @dataclass
@@ -393,6 +398,8 @@ def load_config(path: str | Path) -> Config:
         ),
         deep_scan=_as_bool(s.get("deep_scan"), "settings.deep_scan", True),
         deep_scan_limit=_as_int(s.get("deep_scan_limit"), "settings.deep_scan_limit", 40),
+        daily_summary=_as_bool(s.get("daily_summary"), "settings.daily_summary", True),
+        daily_summary_hour=_as_int(s.get("daily_summary_hour"), "settings.daily_summary_hour", 18),
     )
 
     global_filters = _load_filters(data.get("filters"), "filters") if data.get("filters") else WatchedFilters()
@@ -413,6 +420,7 @@ def load_config(path: str | Path) -> Config:
         group_by=str(m.get("group_by") or "gpu"),
         min_samples=_as_int(m.get("min_samples"), "market_compare.min_samples", 10),
         good_deal_discount=_as_float(m.get("good_deal_discount"), "market_compare.good_deal_discount", 0.20),
+        cheap_threshold=_as_float(m.get("cheap_threshold"), "market_compare.cheap_threshold", 0.60),
     )
     if market.group_by not in {"gpu", "cpu", "brand"}:
         raise ConfigError("market_compare.group_by: gpu / cpu / brand lehet")

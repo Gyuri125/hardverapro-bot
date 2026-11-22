@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
@@ -15,7 +16,7 @@ from .benchmarks import Benchmarks
 from .config import Config, ConfigError, load_config, load_dotenv
 from .fetch import FetchError, Fetcher
 from .models import Hit, Listing
-from .notify import format_huf, send, send_test
+from .notify import format_huf, send, send_summary, send_test
 from .parse import enrich, page_url, parse_detail_page, parse_list_page
 from .rules import best_hit, compute_market_medians, passes_filters
 from .specs import extract
@@ -484,6 +485,36 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def maybe_send_summary(
+    config: Config, state: SeenState, webhook: str | None, *, dry_run: bool
+) -> None:
+    """Naponta egyszer, a beállított óra után összefoglalót küld."""
+    if not config.settings.daily_summary or not webhook:
+        return
+
+    now = datetime.now(timezone.utc)
+    if now.hour < config.settings.daily_summary_hour:
+        return
+
+    today = now.date().isoformat()
+    if state.meta.get("last_summary") == today:
+        return
+
+    items = [
+        item
+        for item in state.items.values()
+        if (item.get("notified_at") or "").startswith(today)
+    ]
+    if not items:
+        return
+
+    send_summary(webhook, today, items, dry_run=dry_run)
+    log.info("Napi összefoglaló elküldve (%d találat)", len(items))
+    if not dry_run:
+        state.meta["last_summary"] = today
+        state.dirty = True
+
+
 def run(args: argparse.Namespace) -> int:
     _setup_logging(args.verbose)
 
@@ -541,9 +572,14 @@ def run(args: argparse.Namespace) -> int:
     new_hits: list[Hit] = []
     for hit in hits:
         uadid = hit.listing.uadid
-        if state.is_new(uadid) or state.price_dropped(
+        if state.is_new(uadid):
+            new_hits.append(hit)
+            continue
+        drop = state.price_drop(
             uadid, hit.listing.price, config.settings.renotify_price_drop_percent
-        ):
+        )
+        if drop:
+            hit.previous_price, hit.price_drop_pct = drop
             new_hits.append(hit)
 
     skipped = len(hits) - len(new_hits)
@@ -587,6 +623,8 @@ def run(args: argparse.Namespace) -> int:
             for hit in new_hits:
                 if hit.listing.uadid in sent:
                     state.mark(hit)
+
+    maybe_send_summary(config, state, webhook, dry_run=args.dry_run or not webhook)
 
     state.save()
     log.info("Kész. Elküldve: %d, state mérete: %d", len(sent), len(state))

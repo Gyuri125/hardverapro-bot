@@ -299,6 +299,15 @@ def score(
     if median and listing.price <= median * (1 - compare.good_deal_discount):
         reasons.append(f"piaci medián {median:,} Ft".replace(",", " "))
 
+    suspicious = bool(
+        compare.enabled
+        and median
+        and listing.price is not None
+        and listing.price <= median * compare.cheap_threshold
+    )
+    if suspicious:
+        reasons.append("gyanúsan olcsó a piaci mediánhoz képest")
+
     points = max(0, min(100, points))
     return Hit(
         listing=listing,
@@ -309,6 +318,7 @@ def score(
         market_median=median,
         over_budget=over_budget,
         budget=profile.max_price,
+        suspiciously_cheap=suspicious,
     )
 
 

@@ -197,6 +197,9 @@ class Hit:
     market_median: int | None = None
     over_budget: bool = False
     budget: int | None = None
+    previous_price: int | None = None
+    price_drop_pct: float | None = None
+    suspiciously_cheap: bool = False
     cpu_delta_pct: float | None = None
     reference_cpu: str | None = None
     reference_score: int | None = None

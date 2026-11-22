@@ -207,3 +207,19 @@ def test_over_budget_is_flagged_and_penalised():
     assert b.budget == 450_000
     assert b.score < a.score
     assert any("keret felett" in reason for reason in b.reasons)
+
+
+def test_suspiciously_cheap_flag():
+    compare = MarketCompare(enabled=True, cheap_threshold=0.60)
+    listing = make_listing("Lenovo Legion 5 RTX 4060 32GB 1TB", 200_000)
+    hit = score(listing, LEGION, compare, median=500_000)
+    assert hit is not None
+    assert hit.suspiciously_cheap is True
+
+
+def test_not_suspicious_when_close_to_median():
+    compare = MarketCompare(enabled=True, cheap_threshold=0.60)
+    listing = make_listing("Lenovo Legion 5 RTX 4060 32GB 1TB", 400_000)
+    hit = score(listing, LEGION, compare, median=500_000)
+    assert hit is not None
+    assert hit.suspiciously_cheap is False

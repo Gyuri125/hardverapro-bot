@@ -2,7 +2,7 @@
 
 from dealradar.benchmarks import BenchResult
 from dealradar.models import Hit, Listing
-from dealradar.notify import build_embed, format_huf, send
+from dealradar.notify import build_embed, format_huf, send, send_summary
 from dealradar.specs import extract
 
 TEXT = (
@@ -132,6 +132,40 @@ def test_over_budget_is_highlighted():
     assert embed["color"] == 0x9B59B6
     assert embed["fields"][0]["name"] == "KERET FELETT"
     assert "15 000 Ft" in embed["fields"][0]["value"]
+
+
+def test_price_drop_is_shown():
+    hit = make_hit()
+    hit.previous_price = 400_000
+    hit.price_drop_pct = 12.5
+    hit.listing.price = 350_000
+
+    fields = fields_of(build_embed(hit))
+    assert "ÁRCÖKKENÉS" in fields
+    assert "400 000 Ft" in fields["ÁRCÖKKENÉS"]
+    assert "12" in fields["ÁRCÖKKENÉS"]
+
+
+def test_suspicious_price_is_highlighted():
+    hit = make_hit()
+    hit.suspiciously_cheap = True
+    hit.market_median = 500_000
+    hit.listing.price = 250_000
+
+    embed = build_embed(hit)
+    assert embed["color"] == 0xE74C3C
+    assert "GYANÚSAN OLCSÓ" in fields_of(embed)
+
+
+def test_summary_dry_run(capsys):
+    items = [
+        {"title": "A gép", "price": 300_000, "score": 80, "url": "https://x/1"},
+        {"title": "B gép", "price": 350_000, "score": 90, "url": "https://x/2"},
+    ]
+    assert send_summary("https://pelda.invalid", "2026-11-22", items, dry_run=True) == 0
+    output = capsys.readouterr().out
+    assert "Napi összefoglaló" in output
+    assert "2026-11-22" in output
 
 
 def test_embeds_are_chunked_under_message_limit():

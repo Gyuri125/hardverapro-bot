@@ -22,6 +22,11 @@ settings:
   # Ennél alacsonyabb pontszámú találatot nem küldünk el.
   # Túl kevés jön -> 40. Túl sok szemét -> 60.
   min_score: 50
+  # Napi összefoglaló üzenet (a beállított óra után, naponta egyszer).
+  # 18 UTC = 19:00 télen / 20:00 nyáron.
+  daily_summary: true
+  daily_summary_hour: 18
+
   # Egy futásban max. ennyi értesítést küldünk (spam védelem).
   # A rangsor pontszám szerint csökkenő, tehát a legjobbak mennek ki elsőként.
   # 10 embed / üzenet, ezért ez 2-3 Discord üzenetet jelent.
@@ -47,7 +52,8 @@ watches:
     url: "https://hardverapro.hu/aprok/notebook/index.html"
     max_pages: 4
     filters:
-      min_price: 80000
+      # 250 eFt alatt gyakorlatilag csak régi, DDR4-es gépek vannak.
+      min_price: 250000
       # A profilok úgyis 450 eFt-nál vágnak, ez csak biztonsági sáv.
       max_price: 500000
 
@@ -220,6 +226,7 @@ market_compare:
   group_by: gpu            # gpu | cpu | brand
   min_samples: 10          # ennyi hirdetés alatt nem számol mediánt
   good_deal_discount: 0.20 # 20% medián alatt = jó deal
+  cheap_threshold: 0.60    # a medián 60%-a alatt = "gyanúsan olcsó"
 
 # ------------------------------------------------------------
 #  BILLENTYŰZET FELISMERÉSE FOTÓBÓL (opcionális)

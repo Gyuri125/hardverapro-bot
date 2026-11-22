@@ -43,10 +43,10 @@ def test_price_drop_detection(tmp_path):
     state = SeenState(tmp_path / "seen.json")
     state.load()
     state.mark(make_hit("1", price=400_000))
-    assert state.price_dropped("1", 350_000, 10)
-    assert not state.price_dropped("1", 390_000, 10)
-    assert not state.price_dropped("1", 100_000, 0)
-    assert not state.price_dropped("ismeretlen", 100_000, 10)
+    assert state.price_drop("1", 350_000, 10) == (400_000, 12.5)
+    assert state.price_drop("1", 390_000, 10) is None
+    assert state.price_drop("1", 100_000, 0) is None
+    assert state.price_drop("ismeretlen", 100_000, 10) is None
 
 
 def test_prune_old_entries(tmp_path):

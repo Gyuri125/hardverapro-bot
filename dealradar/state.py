@@ -42,6 +42,7 @@ class SeenState:
         self.path = Path(path)
         self.retention_days = retention_days
         self.items: dict[str, dict] = {}
+        self.meta: dict = {}
         self.dirty = False
 
     # ------------------------------------------------------------------
@@ -57,12 +58,19 @@ class SeenState:
             return
         items = data.get("items") if isinstance(data, dict) else None
         self.items = items if isinstance(items, dict) else {}
+        meta = data.get("meta") if isinstance(data, dict) else None
+        self.meta = meta if isinstance(meta, dict) else {}
 
     def save(self) -> None:
         if not self.dirty:
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"version": VERSION, "updated_at": _iso(_now()), "items": self.items}
+        payload = {
+            "version": VERSION,
+            "updated_at": _iso(_now()),
+            "meta": self.meta,
+            "items": self.items,
+        }
         self.path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -85,14 +93,22 @@ class SeenState:
     def is_new(self, uadid: str) -> bool:
         return uadid not in self.items
 
-    def price_dropped(self, uadid: str, price: int | None, percent: int) -> bool:
-        """Korábban már elküldött hirdetés ára jelentősen lecsökkent-e?"""
+    def previous_price(self, uadid: str) -> int | None:
+        value = self.items.get(uadid, {}).get("price")
+        return value if isinstance(value, int) and value > 0 else None
+
+    def price_drop(
+        self, uadid: str, price: int | None, percent: int
+    ) -> tuple[int, float] | None:
+        """Ha az ár jelentősen lecsökkent: (régi ár, csökkenés %-ban)."""
         if percent <= 0 or price is None:
-            return False
-        old = self.items.get(uadid, {}).get("price")
-        if not isinstance(old, int) or old <= 0:
-            return False
-        return price <= old * (1 - percent / 100)
+            return None
+        old = self.previous_price(uadid)
+        if old is None:
+            return None
+        if price <= old * (1 - percent / 100):
+            return old, (old - price) / old * 100.0
+        return None
 
     def mark(self, hit: Hit) -> None:
         uadid = hit.listing.uadid
@@ -105,6 +121,7 @@ class SeenState:
             "profile": hit.profile,
             "score": hit.score,
             "title": hit.listing.title[:200],
+            "url": hit.listing.url_abs,
         }
         self.dirty = True
 
