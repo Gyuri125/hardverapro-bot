@@ -256,6 +256,15 @@
    "score": 84,
    "title": "Acer Nitro Magyar Gamer Laptop 144Hz Ryzen 5 5600H 16GB 512GB SSD RTX 3060 6GB"
   },
+  "7788733": {
+   "first_seen": "2026-11-22T20:45:40+00:00",
+   "notified_at": "2026-11-22T20:45:40+00:00",
+   "price": 350000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 70,
+   "title": "MSI Katana 15HXB14WEK gamer laptop i7-14650HX RTX5050/8GB (115W TGP!) 512GB SSD 16GB DDR5,3 év gar",
+   "url": "https://hardverapro.hu/apro/msi_katana_15hxb14wek_gamer_laptop_i7-14650hx_rtx5/friss.html"
+  },
   "7789602": {
    "first_seen": "2026-11-21T20:37:48+00:00",
    "notified_at": "2026-11-21T20:37:48+00:00",
@@ -663,8 +672,20 @@
    "profile": "RTX 4050 / 3050 – 300 alatt",
    "score": 56,
    "title": "ASUS TUF Gaming A15 (Ryzen 7 7735HS / RTX 4050 6 GB / 32GB DDR5 RAM / 2TB SSD) - Gyári garancia"
+  },
+  "7812737": {
+   "first_seen": "2026-11-22T20:45:40+00:00",
+   "notified_at": "2026-11-22T20:45:40+00:00",
+   "price": 269000,
+   "profile": "Üzleti érték – 32 GB RAM + 1 TB SSD, 320 alatt",
+   "score": 68,
+   "title": "HP Victus 16 gamer laptop RTX 4050, 32 GB RAM, 1 TB SSD",
+   "url": "https://hardverapro.hu/apro/hp_victus_16_gamer_laptop_rtx_4050_32_gb_ram_1_tb/friss.html"
   }
  },
- "updated_at": "2026-11-22T12:40:19+00:00",
+ "meta": {
+  "last_summary": "2026-11-22"
+ },
+ "updated_at": "2026-11-22T20:45:40+00:00",
  "version": 1
 }
