@@ -174,6 +174,26 @@ def parse_detail_page(html: str) -> dict:
         " ", strip=True
     ).lower()
 
+    # Eladó: "Hksz03 (újonc) – 2 órája regisztrált" / "18 pozitív értékelés"
+    seller_meta = ""
+    seller_new = False
+    first_block = soup.select_one(".uad-time-location")
+    if first_block is not None:
+        seller_meta = first_block.get_text(" ", strip=True)
+        low = seller_meta.lower()
+        seller_new = any(
+            marker in low
+            for marker in (
+                "friss újonc",
+                "órája regisztrált",
+                "napja regisztrált",
+                "hete regisztrált",
+                "hónapja regisztrált",
+            )
+        )
+    data["seller_meta"] = seller_meta
+    data["seller_new"] = seller_new
+
     images: list[str] = []
     for anchor in soup.select(".carousel-item a[href]"):
         href = (anchor.get("href") or "").strip()
@@ -202,6 +222,8 @@ def enrich(listing: Listing, detail: dict) -> Listing:
     listing.description = detail.get("description") or listing.description
     listing.location = detail.get("location") or listing.location
     listing.shipping = bool(detail.get("shipping")) or listing.shipping
+    listing.seller_new = bool(detail.get("seller_new")) or listing.seller_new
+    listing.seller_meta = detail.get("seller_meta") or listing.seller_meta
     images = detail.get("images") or []
     if images:
         listing.images = list(images)

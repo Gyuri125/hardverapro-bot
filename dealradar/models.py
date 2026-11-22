@@ -161,6 +161,8 @@ class Listing:
     price: int | None = None
     seller: str = ""
     seller_rating: int = 0
+    seller_new: bool = False
+    seller_meta: str = ""
     is_business: bool = False
     location: str = ""
     posted: str = ""

@@ -163,6 +163,10 @@ def build_embed(hit: Hit) -> dict:
         seller += f" ({listing.seller_rating:+d})"
     if listing.is_business:
         seller += " · üzlet"
+    if listing.seller_new:
+        seller += "\n**új fiók – fokozott óvatosság**"
+    elif not listing.seller_rating and not listing.is_business:
+        seller += "\n**nincs értékelés**"
 
     details = [part for part in (specs.details(), listing.condition) if part]
     if listing.shipping:

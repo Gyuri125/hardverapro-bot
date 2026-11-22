@@ -157,6 +157,12 @@ def test_suspicious_price_is_highlighted():
     assert "GYANÚSAN OLCSÓ" in fields_of(embed)
 
 
+def test_new_seller_warning_is_shown():
+    hit = make_hit()
+    hit.listing.seller_new = True
+    assert "új fiók" in fields_of(build_embed(hit))["Eladó"]
+
+
 def test_summary_dry_run(capsys):
     items = [
         {"title": "A gép", "price": 300_000, "score": 80, "url": "https://x/1"},

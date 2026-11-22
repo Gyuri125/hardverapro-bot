@@ -128,3 +128,33 @@ def test_enrich_copies_images():
     listing = parse_list_page(html)[0]
     enrich(listing, {"images": ["https://cdn.rios.hu/x.jpg"]})
     assert listing.images == ["https://cdn.rios.hu/x.jpg"]
+
+
+def test_new_seller_is_detected():
+    html = """
+    <div class="uad-time-location">
+      <table><tr><td><b><a href="/tag/uj_elado.html">Preaktivitas</a></b>
+      (friss újonc) – 2 órája regisztrált</td></tr></table>
+    </div>
+    """
+    detail = parse_detail_page(html)
+    assert detail["seller_new"] is True
+    assert "újonc" in detail["seller_meta"]
+
+
+def test_recent_seller_is_detected():
+    html = """
+    <div class="uad-time-location">
+      <table><tr><td><b><a href="/tag/x.html">Valaki</a></b> (újonc) – 3 napja regisztrált</td></tr></table>
+    </div>
+    """
+    assert parse_detail_page(html)["seller_new"] is True
+
+
+def test_established_seller_is_not_new():
+    html = """
+    <div class="uad-time-location">
+      <table><tr><td><b><a href="/tag/x.html">Hksz03</a></b> (csendes tag) – 10 éve regisztrált</td></tr></table>
+    </div>
+    """
+    assert parse_detail_page(html)["seller_new"] is False
