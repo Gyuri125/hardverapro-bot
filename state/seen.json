@@ -32,6 +32,15 @@
    "score": 62,
    "title": "ASUS TUF Gaming F15 FX507VI/ Intel i7-13620H/ RTX 4070 8GB/ 16GB RAM/ 1TB SSD/ 144Hz"
   },
+  "7696777": {
+   "first_seen": "2026-11-23T15:24:37+00:00",
+   "notified_at": "2026-11-23T15:24:37+00:00",
+   "price": 340000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 71,
+   "title": "MSI Bravo 15 C7VF / AMD Ryzen 7 7735HS + Nvidia GeForce RTX 4060 (8GB) + 32GB RAM + 1TB SSD",
+   "url": "https://hardverapro.hu/apro/msi_bravo_15_c7vf_amd_ryzen_7_7735hs_nvidia_geforc/friss.html"
+  },
   "7700309": {
    "first_seen": "2026-11-14T19:14:30+00:00",
    "notified_at": "2026-11-14T19:14:30+00:00",
@@ -47,6 +56,15 @@
    "profile": "OLED bármilyen gép – 450 alatt",
    "score": 74,
    "title": "Dell Precision 7670 FHD+ / 12600HX / 16G D5 / 512G G4 / A2000 8G / ECO+ tervező"
+  },
+  "7732872": {
+   "first_seen": "2026-11-23T15:24:37+00:00",
+   "notified_at": "2026-11-23T15:24:37+00:00",
+   "price": 350000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 65,
+   "title": "Lenovo Legion5 I5 13gen,16gb ram,1Tb nvme, RTX4060 7 hó gari",
+   "url": "https://hardverapro.hu/apro/lenovo_legion5_i5_13gen_16gb_ram_rtx4060_7_ho_gari/friss.html"
   },
   "7748598": {
    "first_seen": "2026-11-14T10:32:40+00:00",
@@ -79,6 +97,15 @@
    "profile": "RTX 4070 / 4080 – 450 alatt",
    "score": 60,
    "title": "Acer Nitro 16 AN16-42-R39G RTX 4070 / Ryzen 7 8845HS / 1TB SSD / 180Hz WQXGA"
+  },
+  "7759776": {
+   "first_seen": "2026-11-23T15:24:37+00:00",
+   "notified_at": "2026-11-23T15:24:37+00:00",
+   "price": 359999,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 66,
+   "title": "MSI Katana 15 B13V i7-13620H RTX 4060 2K QHD 165Hz",
+   "url": "https://hardverapro.hu/apro/msi_katana_15_b13v_i7-13620h_rtx_4060_2k_qhd_165hz/friss.html"
   },
   "7760973": {
    "first_seen": "2026-11-14T23:05:42+00:00",
@@ -425,6 +452,15 @@
    "score": 85,
    "title": "Dell Magyar 1tulajos Gamer Laptop i7 11800H 16GB 512GB SSD RTX 3050 Ti 4GB"
   },
+  "7798576": {
+   "first_seen": "2026-11-23T15:24:37+00:00",
+   "notified_at": "2026-11-23T15:24:37+00:00",
+   "price": 330000,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 75,
+   "title": "MSI Katana 15 B13VFK i7-13620H / RTX 4060 / 16GB DDR5 / QHD 165Hz",
+   "url": "https://hardverapro.hu/apro/msi_katana_15_b13vfk_i7-13620h_rtx_4060_16gb_ddr5/friss.html"
+  },
   "7799028": {
    "first_seen": "2026-11-14T23:05:42+00:00",
    "notified_at": "2026-11-14T23:05:42+00:00",
@@ -713,6 +749,6 @@
  "meta": {
   "last_summary": "2026-11-22"
  },
- "updated_at": "2026-11-23T14:46:37+00:00",
+ "updated_at": "2026-11-23T15:24:37+00:00",
  "version": 1
 }
