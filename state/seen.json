@@ -1,5 +1,14 @@
 {
  "items": {
+  "7228926": {
+   "first_seen": "2026-11-24T15:19:19+00:00",
+   "notified_at": "2026-11-24T15:19:19+00:00",
+   "price": 270000,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 60,
+   "title": "ASUS TUF Gaming F16 RTX 4050 ÚJSZERŰ ÁLLAPOT GARANCIA 2029-IG!",
+   "url": "https://hardverapro.hu/apro/gamer_pc_csere_gamer_laptop_akar_egy_aoc_gamer_mon/friss.html"
+  },
   "7636401": {
    "first_seen": "2026-11-14T19:14:30+00:00",
    "notified_at": "2026-11-14T19:14:30+00:00",
@@ -771,11 +780,20 @@
    "score": 84,
    "title": "Lenovo IdeaPad Slim 5 15ARP10 (83J3001BHV)",
    "url": "https://hardverapro.hu/apro/lenovo_ideapad_slim_5_15arp10_83j3001bhv/friss.html"
+  },
+  "7815561": {
+   "first_seen": "2026-11-24T15:19:19+00:00",
+   "notified_at": "2026-11-24T15:19:19+00:00",
+   "price": 299990,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 55,
+   "title": "Asus TUF F16 FX607VUR 16\" FHD+ IPS Core 5 210H RTX 4050 16 1TB magyar vbill gar",
+   "url": "https://hardverapro.hu/apro/asus_tuf_f16_fx607vur_16_fhd_ips_core_5_210h_rtx_4/friss.html"
   }
  },
  "meta": {
   "last_summary": "2026-11-22"
  },
- "updated_at": "2026-11-24T04:19:43+00:00",
+ "updated_at": "2026-11-24T15:19:19+00:00",
  "version": 1
 }
