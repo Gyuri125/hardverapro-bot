@@ -13,12 +13,14 @@ from dataclasses import dataclass
 from .models import Specs
 
 GPU_RE = re.compile(
-    r"\b(?:nvidia\s+)?(?:geforce\s+)?(rtx|gtx|rx|arc)\s?-?\s?([a-z]?\d{3,4})\b",
+    r"\b(?:nvidia\s+)?(?:geforce\s+)?(rtx|gtx|rx|arc)\s*(?:studio\s*)?-?\s*([a-z]?\d{3,4})\b",
     re.I,
 )
-CPU_ULTRA_RE = re.compile(r"\bcore\s+ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+CPU_ULTRA_RE = re.compile(r"\bcore\s*ultra\s*([579])[\s-]*(\d{3}[a-z]{0,2})\b", re.I)
 # "Intel 7 240H" / "Ultra 7 240H" (a "Core" szó elhagyva)
-CPU_ULTRA_SHORT_RE = re.compile(r"\b(?:intel\s+|core\s+)?ultra\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+CPU_ULTRA_SHORT_RE = re.compile(
+    r"\b(?:intel\s+|core\s*)?ultra\s*([579])[\s-]*(\d{3}[a-z]{0,2})\b", re.I
+)
 CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 # "Intel Core 7 240H" (Series 2, nem Ultra)
 CPU_CORE_RE = re.compile(r"\bcore\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
@@ -44,6 +46,7 @@ MEMORY_RE = re.compile(r"\b(?:lp)?ddr\s?([345])(?:x)?\b", re.I)
 # Rövidített írásmód: "16G D5", "32G D4"
 MEMORY_SHORT_RE = re.compile(r"\b\d{1,3}\s?g\s?d([45])\b", re.I)
 NITS_RE = re.compile(r"\b(\d{3,4})\s*(?:nit|nits|cd/m2|cd/m²)\b", re.I)
+HDR_NITS_RE = re.compile(r"\bhdr\s*(\d{3,4})\b", re.I)
 GAMUT_RE = re.compile(r"\b(\d{2,3})\s*%\s*(srgb|dci-?p3|adobe\s*rgb|ntsc)\b", re.I)
 RAM_D5_RE = re.compile(r"\b(\d{1,3})\s?g\s?d[45]\b", re.I)
 
@@ -402,7 +405,7 @@ def extract(text: str, title: str | None = None) -> Specs:
     storage = _find_storage(title, title) or _find_storage(text, title)
     ram = _find_ram(title, title) or _find_ram(text, title)
 
-    nits_match = NITS_RE.search(text)
+    nits_match = NITS_RE.search(text) or HDR_NITS_RE.search(text)
     gamut_match = GAMUT_RE.search(text)
     nits = int(nits_match.group(1)) if nits_match else None
     gamut: str | None = None

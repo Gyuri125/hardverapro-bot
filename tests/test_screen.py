@@ -67,6 +67,23 @@ def test_core_7_240h_year():
     assert extract("Intel Core 7 240H").cpu_year == 2025
 
 
+def test_compact_ultra_writing():
+    specs = extract("CoreUltra7-155H 8/16mag 22szál")
+    assert specs.cpu == "ultra 7 155H"
+    assert specs.cpu_year == 2024
+
+
+def test_rtx_studio_writing():
+    specs = extract("Intel ARC + Geforce RTX Studio 4050 6GB Videokártya")
+    assert specs.gpus == ["rtx 4050"]
+
+
+def test_hdr_brightness():
+    specs = extract("16' 2.5K OLED 240Hz G-sync HDR500 Kijelző")
+    assert specs.nits == 500
+    assert specs.oled is True
+
+
 def test_american_keyboard():
     assert extract("2025-ös amerika import modell. Amerikai billentyűzettel.").keyboard == "foreign"
     assert extract("US layout keyboard").keyboard == "foreign"
