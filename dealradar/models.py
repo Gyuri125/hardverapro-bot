@@ -27,6 +27,7 @@ class Specs:
     cpu_year: int | None = None  # a processzor platformjának éve (kb.)
     nits: int | None = None  # kijelző fényereje
     gamut: str | None = None  # pl. "100% sRGB"
+    notes: list[str] = field(default_factory=list)  # fontos részletek a leírásból
     keyboard: str | None = None  # "hu" | "foreign" | None (ismeretlen)
     keyboard_source: str | None = None  # "text" | "photo"
     keyboard_note: str | None = None  # pl. "matricás", "fotó alapján"

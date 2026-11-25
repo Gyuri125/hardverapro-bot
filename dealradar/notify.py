@@ -232,6 +232,15 @@ def build_embed(hit: Hit) -> dict:
                 "inline": False,
             },
         )
+    if specs.notes:
+        fields.append(
+            {
+                "name": "Megjegyzés",
+                "value": _truncate("\n".join(specs.notes), 1000),
+                "inline": False,
+            }
+        )
+
     if hit.reasons:
         fields.append(
             {

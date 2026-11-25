@@ -49,6 +49,13 @@ NITS_RE = re.compile(r"\b(\d{3,4})\s*(?:nit|nits|cd/m2|cd/m²)\b", re.I)
 HDR_NITS_RE = re.compile(r"\bhdr\s*(\d{3,4})\b", re.I)
 GAMUT_RE = re.compile(r"\b(\d{2,3})\s*%\s*(srgb|dci-?p3|adobe\s*rgb|ntsc)\b", re.I)
 RAM_D5_RE = re.compile(r"\b(\d{1,3})\s?g\s?d[45]\b", re.I)
+WARRANTY_DATE_RE = re.compile(r"garanci\w*[^.\n]{0,40}?(20\d{2})[.\-/](\d{1,2})", re.I)
+BATTERY_RE = re.compile(
+    r"(?:akku|akkumul[áa]tor|battery)[^.\n]{0,30}?(\d{2,3}(?:[.,]\d)?)\s*%", re.I
+)
+DEFECT_RE = re.compile(
+    r"[^.\n]{0,60}(horpad|karcol|kop[áa]s|folt|reped|sérül|sertés)[^.\n]{0,60}", re.I
+)
 
 _INTEL_YEAR = {6: 2016, 7: 2017, 8: 2018, 9: 2019, 10: 2020, 11: 2021, 12: 2022, 13: 2023, 14: 2024}
 _AMD_SERIES_YEAR = {3000: 2020, 4000: 2020, 5000: 2021, 6000: 2022, 7000: 2023, 8000: 2024}
@@ -393,6 +400,42 @@ def _cpu_year(cpu: str | None) -> int | None:
     return None
 
 
+def _find_notes(text: str) -> list[str]:
+    """Fontos részletek a leírásból: garancia, akku, hibák, tartozékok."""
+    notes: list[str] = []
+
+    warranty = WARRANTY_DATE_RE.search(text)
+    if warranty:
+        notes.append(f"garancia {warranty.group(1)}.{int(warranty.group(2)):02d}-ig")
+
+    battery = BATTERY_RE.search(text)
+    if battery:
+        notes.append(f"akku {battery.group(1).replace(',', '.')}%")
+
+    for defect in DEFECT_RE.finditer(text):
+        sentence = defect.group(0).strip(" .,;")
+        keyword = defect.group(1).lower()
+        index = sentence.lower().find(keyword)
+        before = sentence.lower()[max(0, index - 12) : index]
+        if re.search(r"\b(nem|nincs|mentes)\b", before):
+            continue
+        notes.append(sentence[:90])
+        break
+
+    low = norm(text)
+    extras: list[str] = []
+    if "doboz" in low:
+        extras.append("doboz")
+    if "tolto" in low or "tapegyseg" in low:
+        extras.append("töltő")
+    if "szamla" in low:
+        extras.append("számla")
+    if extras:
+        notes.append(" + ".join(extras))
+
+    return notes[:4]
+
+
 def extract(text: str, title: str | None = None) -> Specs:
     """Specifikációk kinyerése a címből + leírásból."""
     text = _TRADEMARK_RE.sub("", text)
@@ -421,6 +464,7 @@ def extract(text: str, title: str | None = None) -> Specs:
         memory_gen=_memory_gen(text),
         nits=nits,
         gamut=gamut,
+        notes=_find_notes(text),
         ram_gb=ram,
         storage_gb=storage,
         refresh_hz=_find_refresh(text),
