@@ -57,6 +57,13 @@ def cpu_queries(cpu: str) -> list[str]:
         return [f"AMD Ryzen {rest}", f"AMD {cpu}"]
     if n.startswith(("xeon", "pentium", "celeron")):
         return [f"Intel {cpu}"]
+    if n[:1].isdigit():
+        # Csupasz típusszám: a márkát a PassMark-találat dönti el
+        return [
+            f"Intel Core i5-{cpu}",
+            f"Intel Core i7-{cpu}",
+            f"Intel Core i9-{cpu}",
+        ]
     return [cpu]
 
 

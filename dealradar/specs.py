@@ -24,6 +24,8 @@ CPU_ULTRA_SHORT_RE = re.compile(
 CPU_INTEL_NUM_RE = re.compile(r"\bintel\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
 # "Intel Core 7 240H" (Series 2, nem Ultra)
 CPU_CORE_RE = re.compile(r"\bcore\s+([579])\s+(\d{3}[a-z]{0,2})\b", re.I)
+# Csupasz típusszám: "12600HX", "1135G7", "12700H" (márkanév nélkül)
+CPU_BARE_MODEL_RE = re.compile(r"\b(1[0-4]\d{3})(HX|HK|H|P|U|G\d)\b", re.I)
 CPU_INTEL_RE = re.compile(
     r"\b(?:intel\s+)?core\s+([iI][3579])[-\s]?\(?(\d{4,5}[a-z]{0,3}\d{0,2})\b", re.I
 )
@@ -203,6 +205,11 @@ def _find_cpu(text: str) -> str | None:
         candidates.append((match.start(), f"ryzen {match.group(1)} {match.group(2).upper()}"))
 
     if not candidates:
+        match = CPU_BARE_MODEL_RE.search(text)
+        if match:
+            candidates.append((match.start(), f"{match.group(1)}{match.group(2).upper()}"))
+
+    if not candidates:
         return None
     return min(candidates, key=lambda item: item[0])[1]
 
@@ -372,6 +379,16 @@ def _cpu_year(cpu: str | None) -> int | None:
             return {1: 2024, 2: 2025, 3: 2026}.get(int(match.group(1)[0]))
         return None
 
+    # Csupasz típusszám: "12600HX" -> 12. generáció
+    match = re.match(r"^(\d{4,5})", n)
+    if match:
+        digits = match.group(1)
+        if len(digits) >= 5 or digits.startswith("1"):
+            generation = int(digits[:2])
+        else:
+            generation = int(digits[0])
+        return _INTEL_YEAR.get(generation)
+
     if n.startswith(("i3", "i5", "i7", "i9")):
         match = re.search(r"i[3579][-\s]?(\d{4,5}[a-z]{0,3}\d{0,2})", n)
         if not match:
@@ -442,7 +459,16 @@ def extract(text: str, title: str | None = None) -> Specs:
     title = _TRADEMARK_RE.sub("", title if title is not None else text)
     keyboard = _find_keyboard(text, title)
     # A cím a legmegbízhatóbb: bolt-hirdetések leírásában sok más gép szerepel.
-    cpu = _find_cpu(title) or _find_cpu(text)
+    description = text[len(title) :] if text.startswith(title) else text
+    cpu = _find_cpu(title)
+    if not cpu or cpu[:1].isdigit():
+        # A címben csak típusszám van (pl. "12600HX"): ha a leírásban ott a
+        # teljes név, azt használjuk, mert abból márkához is tudjuk kötni.
+        full = _find_cpu(description)
+        if full and not full[:1].isdigit():
+            cpu = full
+        elif not cpu:
+            cpu = full
     gpus = _find_gpus(title) or _find_gpus(text)
     screen = _find_screen(title) or _find_screen(text, allow_model_heuristics=False)
     storage = _find_storage(title, title) or _find_storage(text, title)

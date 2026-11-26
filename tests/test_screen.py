@@ -67,6 +67,23 @@ def test_core_7_240h_year():
     assert extract("Intel Core 7 240H").cpu_year == 2025
 
 
+def test_bare_intel_model_number():
+    specs = extract("Lenovo LOQ 15IAX9 (12600HX, RTX4050 105W, 24GB DDR5, 1TB SSD)")
+    assert specs.cpu == "12600HX"
+    assert specs.cpu_year == 2022
+    assert specs.gpus == ["rtx 4050"]
+
+
+def test_bare_model_falls_back_to_brand_lookup():
+    from dealradar.benchmarks import cpu_queries
+
+    assert cpu_queries("12600HX") == [
+        "Intel Core i5-12600HX",
+        "Intel Core i7-12600HX",
+        "Intel Core i9-12600HX",
+    ]
+
+
 def test_compact_ultra_writing():
     specs = extract("CoreUltra7-155H 8/16mag 22szál")
     assert specs.cpu == "ultra 7 155H"

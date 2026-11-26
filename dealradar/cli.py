@@ -245,6 +245,11 @@ def attach_benchmarks(fetcher: Fetcher, hits: list[Hit]) -> Benchmarks:
         specs = hit.listing.specs
         hit.cpu_bench = bench.cpu(specs.cpu)
         hit.gpu_bench = bench.gpu(specs.gpus[0] if specs.gpus else None)
+        # Csupasz típusszámnál a PassMark-találat adja a márkát (i5-12600HX)
+        if hit.cpu_bench and specs.cpu and specs.cpu[:1].isdigit():
+            match = re.search(r"(i[3579]-\w+)", hit.cpu_bench.name, re.I)
+            if match:
+                specs.cpu = match.group(1)
         log.debug(
             "benchmark: %s -> CPU %s, GPU %s",
             hit.listing.title[:40],
