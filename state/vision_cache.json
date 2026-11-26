@@ -1,0 +1,12 @@
+{
+ "items": {
+  "cd910c8d1bafdd078a21": {
+   "at": "2026-11-26T23:04:21+00:00",
+   "confidence": 0.95,
+   "evidence": "The laptop has a factory Hungarian QWERTZ layout with dedicated í, ő, and ű keys alongside an ISO Enter key.",
+   "layout": "hu"
+  }
+ },
+ "updated_at": "2026-11-26T23:04:21+00:00",
+ "version": 1
+}

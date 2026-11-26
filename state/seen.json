@@ -835,6 +835,15 @@
    "title": "Asus ROG Zephyrus G16/ Ultra7-155H/ARC+RTX Studio 4050 6GB/1TB/16GB/16' 2.5K OLED 240Hz / Beszám ON!",
    "url": "https://hardverapro.hu/apro/asus_rog_zephyrus_g16_ultra7-155h_arc_rtx_studio_4/friss.html"
   },
+  "7816805": {
+   "first_seen": "2026-11-26T23:04:34+00:00",
+   "notified_at": "2026-11-26T23:04:34+00:00",
+   "price": 325000,
+   "profile": "RTX 5060 / 5070 – 450 alatt",
+   "score": 100,
+   "title": "ACER NITRO V16",
+   "url": "https://hardverapro.hu/apro/acer_nitro_v16_4/friss.html"
+  },
   "7817116": {
    "first_seen": "2026-11-25T14:29:56+00:00",
    "notified_at": "2026-11-25T14:29:56+00:00",
@@ -880,6 +889,15 @@
    "title": "Lenovo LOQ 15IAX9 (12600HX, RTX4050 105W, 24GB DDR5, 1TB SSD) 2029 Premium Care Garancia",
    "url": "https://hardverapro.hu/apro/lenovo_loq_15iax9_12600hx_rtx4050_105w_24gb_ddr5_1/friss.html"
   },
+  "7817495": {
+   "first_seen": "2026-11-26T23:04:34+00:00",
+   "notified_at": "2026-11-26T23:04:34+00:00",
+   "price": 259990,
+   "profile": "RTX 5050 / 4060 – 400 alatt",
+   "score": 100,
+   "title": "MSI CYBORG 15 // i7-13620H // 16GB RAM // 512GB SSD // RTX 4060",
+   "url": "https://hardverapro.hu/apro/msi_cyborg_15_i7-13620h_16gb_ram_512gb_ssd_rtx_406/friss.html"
+  },
   "7818785": {
    "first_seen": "2026-11-26T13:57:52+00:00",
    "notified_at": "2026-11-26T13:57:52+00:00",
@@ -888,11 +906,20 @@
    "score": 100,
    "title": "Acer Swift GO 15,6\",3,2K OLED 120Hz,i7 1355(12X5,0Ghz)IrisXe,Vi.bil,16GBDDR5 RAM,512-1TB SSD,Szép(2)",
    "url": "https://hardverapro.hu/apro/acer_swift_go_15_6_3_2k_oled_120hz_i7_1355_12x5_0g_5/friss.html"
+  },
+  "7819529": {
+   "first_seen": "2026-11-26T23:04:34+00:00",
+   "notified_at": "2026-11-26T23:04:34+00:00",
+   "price": 299999,
+   "profile": "RTX 4050 / 3050 – 300 alatt",
+   "score": 52,
+   "title": "Lenovo LOQ 15ARP9 Garanciális!",
+   "url": "https://hardverapro.hu/apro/lenovo_loq_15arp9_garancialis/friss.html"
   }
  },
  "meta": {
-  "last_summary": "2026-11-24"
+  "last_summary": "2026-11-26"
  },
- "updated_at": "2026-11-26T13:57:52+00:00",
+ "updated_at": "2026-11-26T23:04:34+00:00",
  "version": 1
 }
